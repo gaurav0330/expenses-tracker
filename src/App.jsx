@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './lib/firebase';
+import { Toaster } from 'react-hot-toast';
 import Dashboard from './components/Dashboard';
 import Auth from './components/Auth';
 
@@ -24,7 +25,33 @@ function App() {
     );
   }
 
-  return user ? <Dashboard user={user} /> : <Auth />;
+  return (
+    <>
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            borderRadius: '12px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#f43f5e',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+      {user ? <Dashboard user={user} /> : <Auth />}
+    </>
+  );
 }
 
 export default App;

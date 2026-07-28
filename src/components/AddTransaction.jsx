@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PlusCircle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const DEFAULT_CATEGORIES = [
   'Food & Dining',
@@ -46,59 +47,70 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
       }
     }
 
-    await onAddTransaction({
-      type,
-      amount: parseFloat(amount),
-      description,
-      category: finalCategory,
-      date
-    });
-
-    setAmount('');
-    setDescription('');
-    if (isAddingCustom) {
-      setIsAddingCustom(false);
-      setNewCategoryName('');
-      setCategory(finalCategory);
+    try {
+      await onAddTransaction({
+        type,
+        amount: parseFloat(amount),
+        description,
+        category: finalCategory,
+        date
+      });
+      toast.success(`${type === 'expense' ? 'Expense' : 'Income'} added successfully!`);
+      setAmount('');
+      setDescription('');
+      if (isAddingCustom) {
+        setIsAddingCustom(false);
+        setNewCategoryName('');
+        setCategory(finalCategory);
+      }
+    } catch (error) {
+      toast.error('Failed to add transaction.');
     }
   };
 
   return (
-    <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700/50">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold flex items-center gap-2">
-          <PlusCircle className="w-5 h-5 text-emerald-400" />
-          New Transaction
+    <div className="bg-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-700/50">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <PlusCircle className="w-6 h-6 text-emerald-400 shrink-0" />
+          <span className="hidden sm:inline">New Transaction</span>
+          <span className="sm:hidden">New</span>
         </h2>
         
-        {/* Toggle Income/Expense */}
-        <div className="flex bg-slate-900 rounded-lg p-1 border border-slate-700">
-          <button
-            type="button"
-            onClick={() => setType('expense')}
-            className={`px-3 py-1 text-sm font-medium rounded-md flex items-center gap-1 transition-colors ${
-              type === 'expense' ? 'bg-rose-500 text-white' : 'text-slate-400 hover:text-slate-200'
+        {/* Improved Sleek Toggle Switch */}
+        <button
+          type="button"
+          onClick={() => setType(type === 'expense' ? 'income' : 'expense')}
+          className="relative flex bg-slate-900 p-1 rounded-xl border border-slate-700/50 shadow-inner w-[220px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        >
+          {/* Animated Slider Background */}
+          <div 
+            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg shadow-lg transition-all duration-300 ease-out ${
+              type === 'expense' ? 'left-1 bg-rose-500 shadow-rose-500/20' : 'left-[calc(50%+2px)] bg-emerald-500 shadow-emerald-500/20'
+            }`} 
+          />
+          
+          <div
+            className={`relative w-1/2 py-2.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider z-10 transition-colors duration-300 rounded-lg ${
+              type === 'expense' ? 'text-white' : 'text-slate-400'
             }`}
           >
-            <ArrowDownRight className="w-4 h-4" />
             Expense
-          </button>
-          <button
-            type="button"
-            onClick={() => setType('income')}
-            className={`px-3 py-1 text-sm font-medium rounded-md flex items-center gap-1 transition-colors ${
-              type === 'income' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-slate-200'
+          </div>
+          
+          <div
+            className={`relative w-1/2 py-2.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider z-10 transition-colors duration-300 rounded-lg ${
+              type === 'income' ? 'text-white' : 'text-slate-400'
             }`}
           >
-            <ArrowUpRight className="w-4 h-4" />
             Income
-          </button>
-        </div>
+          </div>
+        </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-slate-400 mb-1">Amount (₹)</label>
+          <label className="block text-sm font-semibold text-slate-300 mb-2">Amount (₹)</label>
           <input
             type="number"
             step="0.01"
@@ -106,25 +118,31 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
             required
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors"
+            onWheel={(e) => e.target.blur()}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+              }
+            }}
+            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-inner"
             placeholder="0.00"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-400 mb-1">Description (Optional)</label>
+          <label className="block text-sm font-semibold text-slate-300 mb-2">Description (Optional)</label>
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors"
+            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-inner"
             placeholder="What was this for?"
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-5">
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Category</label>
+            <label className="block text-sm font-semibold text-slate-300 mb-2">Category</label>
             {!isAddingCustom ? (
               <select
                 value={category}
@@ -135,7 +153,7 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
                     setCategory(e.target.value);
                   }
                 }}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors text-slate-200"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-white text-base shadow-inner appearance-none cursor-pointer"
               >
                 {allCategories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -150,7 +168,7 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
                   autoFocus
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors"
+                  className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-white shadow-inner"
                   placeholder="New category..."
                 />
                 <button
@@ -159,7 +177,7 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
                     setIsAddingCustom(false);
                     setNewCategoryName('');
                   }}
-                  className="px-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors"
+                  className="px-4 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-bold transition-colors"
                 >
                   Cancel
                 </button>
@@ -167,13 +185,13 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Date</label>
+            <label className="block text-sm font-semibold text-slate-300 mb-2">Date</label>
             <input
               type="date"
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors [color-scheme:dark]"
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-white shadow-inner [color-scheme:dark]"
             />
           </div>
         </div>
@@ -181,12 +199,12 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full text-white font-medium py-3 rounded-lg mt-6 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg ${
+          className={`w-full text-white font-bold py-4 rounded-xl mt-8 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg shadow-xl ${
             type === 'expense' ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
           }`}
         >
           {isLoading ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             `Save ${type === 'expense' ? 'Expense' : 'Income'}`
           )}

@@ -1,7 +1,8 @@
 import { format } from 'date-fns';
 import { TrendingDown, TrendingUp, Wallet, Coins } from 'lucide-react';
+import { formatINR } from '../lib/utils';
 
-export default function MonthlySummary({ transactions, currentDate }) {
+export default function MonthlySummary({ transactions, currentDate, previousBalance = 0 }) {
   const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -9,7 +10,7 @@ export default function MonthlySummary({ transactions, currentDate }) {
   const expenses = transactions.filter(t => t.type !== 'income');
   const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
   
-  const balance = totalIncome - totalExpense;
+  const balance = previousBalance + totalIncome - totalExpense;
 
   const categoryTotals = expenses.reduce((acc, t) => {
     acc[t.category] = (acc[t.category] || 0) + t.amount;
@@ -21,7 +22,7 @@ export default function MonthlySummary({ transactions, currentDate }) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       
       {/* Total Income Card */}
-      <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700/50">
+      <div className="bg-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-700/50">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-medium text-slate-400 text-sm tracking-wider uppercase">
             Total Income
@@ -31,8 +32,8 @@ export default function MonthlySummary({ transactions, currentDate }) {
           </div>
         </div>
         <div className="flex flex-col">
-          <span className="text-3xl font-bold text-slate-200">
-            ₹{totalIncome.toFixed(2)}
+          <span className="text-2xl sm:text-3xl font-bold text-slate-200">
+            {formatINR(totalIncome)}
           </span>
           <span className="text-slate-400 text-sm mt-2 font-medium">
             in {format(currentDate, 'MMM yyyy')}
@@ -41,7 +42,7 @@ export default function MonthlySummary({ transactions, currentDate }) {
       </div>
 
       {/* Total Spending Card */}
-      <div className="bg-gradient-to-br from-rose-500 to-rose-700 rounded-2xl p-6 shadow-xl shadow-rose-900/20 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-br from-rose-500 to-rose-700 rounded-2xl p-5 sm:p-6 shadow-xl shadow-rose-900/20 text-white relative overflow-hidden">
         <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -53,8 +54,8 @@ export default function MonthlySummary({ transactions, currentDate }) {
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-tight">
-              ₹{totalExpense.toFixed(2)}
+            <span className="text-2xl sm:text-3xl font-bold tracking-tight">
+              {formatINR(totalExpense)}
             </span>
           </div>
           <p className="text-rose-100 text-sm mt-2 font-medium">
@@ -64,7 +65,7 @@ export default function MonthlySummary({ transactions, currentDate }) {
       </div>
 
       {/* Balance Card */}
-      <div className={`bg-gradient-to-br rounded-2xl p-6 shadow-xl text-white relative overflow-hidden ${
+      <div className={`bg-gradient-to-br rounded-2xl p-5 sm:p-6 shadow-xl text-white relative overflow-hidden ${
         balance >= 0 ? 'from-emerald-500 to-emerald-700 shadow-emerald-900/20' : 'from-orange-500 to-orange-700 shadow-orange-900/20'
       }`}>
         <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
@@ -78,18 +79,25 @@ export default function MonthlySummary({ transactions, currentDate }) {
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-tight">
-              ₹{balance.toFixed(2)}
+            <span className="text-2xl sm:text-3xl font-bold tracking-tight">
+              {formatINR(balance)}
             </span>
           </div>
-          <p className="text-white/80 text-sm mt-2 font-medium">
-            Saved this month
-          </p>
+          <div className="flex flex-col mt-2 gap-1 text-sm font-medium">
+            <p className="text-white/80">
+              {previousBalance === 0 ? 'Saved this month' : 'Total available'}
+            </p>
+            {previousBalance !== 0 && (
+              <p className="text-white/60 text-xs">
+                Includes {formatINR(previousBalance)} rollover
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Top Category Card */}
-      <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700/50">
+      <div className="bg-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-700/50">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-medium text-slate-400 text-sm tracking-wider uppercase">
             Top Category
@@ -103,7 +111,7 @@ export default function MonthlySummary({ transactions, currentDate }) {
             {topCategory ? topCategory[0] : 'None'}
           </span>
           <span className="text-slate-400 text-sm mt-1">
-            {topCategory ? `₹${topCategory[1].toFixed(2)}` : '₹0.00'}
+            {topCategory ? formatINR(topCategory[1]) : '₹0.00'}
           </span>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { Trash2, ShoppingBag, Coffee, Car, Film, Home, Dumbbell, Plane, MoreHorizontal, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { formatINR } from '../lib/utils';
 
 const CategoryIcon = ({ category, className }) => {
   const icons = {
@@ -18,7 +19,7 @@ const CategoryIcon = ({ category, className }) => {
 export default function TransactionList({ transactions, onDeleteTransaction, isLoading }) {
   if (isLoading) {
     return (
-      <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700/50 min-h-[400px] flex items-center justify-center">
+      <div className="bg-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-700/50 min-h-[400px] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
       </div>
     );
@@ -26,7 +27,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
 
   if (transactions.length === 0) {
     return (
-      <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700/50 min-h-[400px] flex flex-col items-center justify-center text-center">
+      <div className="bg-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-700/50 min-h-[400px] flex flex-col items-center justify-center text-center">
         <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
           <ShoppingBag className="w-8 h-8 text-slate-600" />
         </div>
@@ -37,7 +38,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
   }
 
   return (
-    <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700/50 overflow-hidden flex flex-col h-full">
+    <div className="bg-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-700/50 overflow-hidden flex flex-col h-full">
       <h2 className="text-xl font-semibold mb-6">Recent Transactions</h2>
       <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
         {transactions.map((t) => {
@@ -68,7 +69,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
               
               <div className="flex items-center gap-4">
                 <span className={`font-semibold text-lg ${isIncome ? 'text-emerald-400' : 'text-slate-200'}`}>
-                  {isIncome ? '+' : '-'}₹{t.amount.toFixed(2)}
+                  {isIncome ? '+' : '-'}{formatINR(t.amount)}
                 </span>
                 <button
                   onClick={() => onDeleteTransaction(t.id)}

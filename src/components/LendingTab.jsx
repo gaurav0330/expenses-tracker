@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Users, CheckCircle, Clock, Trash2, PlusCircle } from 'lucide-react';
 import { addLend, getLends, updateLendStatus, deleteLend } from '../lib/expenseService';
+import toast from 'react-hot-toast';
+import { formatINR } from '../lib/utils';
 
 export default function LendingTab({ user }) {
   const [lends, setLends] = useState([]);
@@ -41,12 +43,14 @@ export default function LendingTab({ user }) {
         description,
         date
       });
+      toast.success('Lending entry added!');
       setPerson('');
       setAmount('');
       setDescription('');
       await fetchLends();
     } catch (error) {
       console.error(error);
+      toast.error('Failed to add entry.');
     } finally {
       setIsAdding(false);
     }
@@ -57,8 +61,10 @@ export default function LendingTab({ user }) {
     try {
       await updateLendStatus(id, newStatus);
       setLends(lends.map(l => l.id === id ? { ...l, status: newStatus } : l));
+      toast.success(`Marked as ${newStatus}`);
     } catch (error) {
       console.error(error);
+      toast.error('Failed to update status');
     }
   };
 
@@ -66,8 +72,10 @@ export default function LendingTab({ user }) {
     try {
       await deleteLend(id);
       setLends(lends.filter(l => l.id !== id));
+      toast.success('Entry deleted');
     } catch (error) {
       console.error(error);
+      toast.error('Failed to delete');
     }
   };
 
@@ -77,45 +85,58 @@ export default function LendingTab({ user }) {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Left Column - Form & Stats */}
       <div className="lg:col-span-1 space-y-6">
-        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 shadow-xl shadow-indigo-900/20 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 sm:p-6 shadow-xl shadow-indigo-900/20 text-white relative overflow-hidden">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
           <div className="relative z-10">
             <h3 className="font-medium text-indigo-50 text-sm tracking-wider uppercase mb-2">Total Pending (To Receive)</h3>
-            <span className="text-3xl font-bold tracking-tight">₹{pendingTotal.toFixed(2)}</span>
+            <span className="text-3xl font-bold tracking-tight">{formatINR(pendingTotal)}</span>
           </div>
         </div>
 
-        <div className="bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700/50">
-          <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-            <PlusCircle className="w-5 h-5 text-indigo-400" />
+        <div className="bg-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-700/50">
+          <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
+            <PlusCircle className="w-6 h-6 text-indigo-400" />
             New Lending Entry
           </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Who did you lend to?</label>
-              <input type="text" required value={person} onChange={(e) => setPerson(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white" placeholder="Name" />
+              <label className="block text-sm font-semibold text-slate-300 mb-2">Who did you lend to?</label>
+              <input type="text" required value={person} onChange={(e) => setPerson(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner" placeholder="Name" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Amount (₹)</label>
-              <input type="number" step="0.01" min="0" required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white" placeholder="0.00" />
+              <label className="block text-sm font-semibold text-slate-300 mb-2">Amount (₹)</label>
+              <input 
+                type="number" 
+                step="0.01" 
+                min="0" 
+                required 
+                value={amount} 
+                onChange={(e) => setAmount(e.target.value)} 
+                onWheel={(e) => e.target.blur()}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
+                }}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner" 
+                placeholder="0.00" 
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Description (Optional)</label>
-              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white" placeholder="Reason" />
+              <label className="block text-sm font-semibold text-slate-300 mb-2">Description (Optional)</label>
+              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner" placeholder="Reason" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Date</label>
-              <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white [color-scheme:dark]" />
+              <label className="block text-sm font-semibold text-slate-300 mb-2">Date</label>
+              <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner [color-scheme:dark]" />
             </div>
-            <button type="submit" disabled={isAdding} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-3 rounded-lg mt-6 shadow-lg shadow-indigo-500/20 flex justify-center">
-              {isAdding ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Save Entry'}
+            <button type="submit" disabled={isAdding} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-4 rounded-xl mt-8 shadow-xl shadow-indigo-500/20 flex justify-center text-lg transition-all active:scale-[0.98]">
+              {isAdding ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Save Entry'}
             </button>
           </form>
         </div>
       </div>
 
       {/* Right Column - List */}
-      <div className="lg:col-span-2 bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700/50 flex flex-col min-h-[400px]">
+      <div className="lg:col-span-2 bg-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-700/50 flex flex-col min-h-[400px]">
         <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
           <Users className="w-5 h-5 text-indigo-400" />
           Active Lending Records
@@ -154,7 +175,7 @@ export default function LendingTab({ user }) {
                 </div>
                 
                 <div className="flex items-center gap-4">
-                  <span className="font-semibold text-lg text-slate-200">₹{lend.amount.toFixed(2)}</span>
+                  <span className="font-semibold text-lg text-slate-200">{formatINR(lend.amount)}</span>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                     <button onClick={() => handleToggleStatus(lend.id, lend.status)} className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg" title={lend.status === 'pending' ? 'Mark Paid' : 'Mark Pending'}>
                       {lend.status === 'pending' ? <CheckCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}

@@ -36,16 +36,29 @@ export const getTransactionsForMonth = async (userId, date) => {
 
     const querySnapshot = await getDocs(q);
     const transactions = [];
+    let previousBalance = 0;
+
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      // Filter by date range in memory instead
+      
+      // Filter by date range in memory
       if (data.date >= start && data.date <= end) {
         transactions.push({ id: doc.id, ...data });
+      } 
+      // Calculate rollover balance for everything before this month
+      else if (data.date < start) {
+        if (data.type === 'income') {
+          previousBalance += data.amount;
+        } else {
+          previousBalance -= data.amount;
+        }
       }
     });
     
     // Sort in memory
-    return transactions.sort((a, b) => new Date(b.date) - new Date(a.date) || new Date(b.createdAt) - new Date(a.createdAt));
+    transactions.sort((a, b) => new Date(b.date) - new Date(a.date) || new Date(b.createdAt) - new Date(a.createdAt));
+    
+    return { transactions, previousBalance };
   } catch (error) {
     console.error("Error getting transactions: ", error);
     throw error;
