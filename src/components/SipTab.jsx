@@ -70,15 +70,15 @@ export default function SipTab({ user }) {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Left Column - Form & Stats */}
       <div className="lg:col-span-1 space-y-6">
-        <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl p-5 sm:p-6 shadow-xl shadow-cyan-900/20 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-2xl p-5 sm:p-6 shadow-xl shadow-cyan-950/30 text-white relative overflow-hidden">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
           <div className="relative z-10">
-            <h3 className="font-medium text-cyan-50 text-sm tracking-wider uppercase mb-2">Total Monthly SIP</h3>
-            <span className="text-3xl font-bold tracking-tight">{formatINR(totalSipAmount)}</span>
+            <h3 className="font-semibold text-cyan-100 text-xs tracking-wider uppercase mb-2">Total Monthly SIP</h3>
+            <span className="text-3xl font-extrabold tracking-tight font-amount">{formatINR(totalSipAmount)}</span>
           </div>
         </div>
 
-        <div className="bg-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-700/50">
+        <div className="bg-[#111827] rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800/80">
           <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
             <PlusCircle className="w-6 h-6 text-cyan-400" />
             New SIP Entry
@@ -86,7 +86,7 @@ export default function SipTab({ user }) {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">Fund Name</label>
-              <input type="text" required value={fundName} onChange={(e) => setFundName(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-white text-lg shadow-inner" placeholder="e.g., Nifty 50 Index Fund" />
+              <input type="text" required value={fundName} onChange={(e) => setFundName(e.target.value)} className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-white text-lg shadow-inner" placeholder="e.g., Nifty 50 Index Fund" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">Amount (₹)</label>
@@ -101,7 +101,7 @@ export default function SipTab({ user }) {
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
                 }}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-white text-lg shadow-inner" 
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-white text-lg font-amount shadow-inner" 
                 placeholder="0.00" 
               />
             </div>
@@ -118,10 +118,10 @@ export default function SipTab({ user }) {
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
                 }}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-white text-lg shadow-inner" 
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-white text-lg shadow-inner" 
               />
             </div>
-            <button type="submit" disabled={isAdding} className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-4 rounded-xl mt-8 shadow-xl shadow-cyan-500/20 flex justify-center text-lg transition-all active:scale-[0.98]">
+            <button type="submit" disabled={isAdding} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl mt-8 shadow-xl shadow-cyan-600/20 flex justify-center text-lg transition-all active:scale-[0.98]">
               {isAdding ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Save SIP'}
             </button>
           </form>
@@ -129,7 +129,7 @@ export default function SipTab({ user }) {
       </div>
 
       {/* Right Column - List */}
-      <div className="lg:col-span-2 bg-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-700/50 flex flex-col min-h-[400px]">
+      <div className="lg:col-span-2 bg-[#111827] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 flex flex-col h-[580px] max-h-[80vh] overflow-hidden">
         <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
           <Activity className="w-5 h-5 text-cyan-400" />
           Active SIPs
@@ -148,7 +148,7 @@ export default function SipTab({ user }) {
             <p className="text-slate-500 mt-1">Start investing and track your SIPs here.</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
             {sips.map((sip) => (
               <div key={sip.id} className="group bg-slate-900/50 hover:bg-slate-900 rounded-xl p-4 flex items-center justify-between border border-transparent hover:border-slate-700 transition-all">
                 <div className="flex items-center gap-4">

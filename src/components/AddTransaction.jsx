@@ -69,7 +69,7 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
   };
 
   return (
-    <div className="bg-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-700/50">
+    <div className="bg-[#111827] rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800/80">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <PlusCircle className="w-6 h-6 text-emerald-400 shrink-0" />
@@ -124,7 +124,7 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
                 e.preventDefault();
               }
             }}
-            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-inner"
+            className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-5 py-4 text-white text-lg font-amount focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-inner"
             placeholder="0.00"
           />
         </div>

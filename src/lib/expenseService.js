@@ -110,6 +110,35 @@ export const addUserCategory = async (userId, categoryName) => {
   }
 };
 
+export const getBudgetGoal = async (userId) => {
+  try {
+    const docRef = doc(db, SETTINGS_COLLECTION, userId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists() && docSnap.data().budgetGoal) {
+      return docSnap.data().budgetGoal;
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error getting budget goal: ", error);
+    return 0;
+  }
+};
+
+export const setBudgetGoal = async (userId, goal) => {
+  try {
+    const docRef = doc(db, SETTINGS_COLLECTION, userId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      await updateDoc(docRef, { budgetGoal: parseFloat(goal) });
+    } else {
+      await setDoc(docRef, { budgetGoal: parseFloat(goal) });
+    }
+  } catch (error) {
+    console.error("Error setting budget goal: ", error);
+    throw error;
+  }
+};
+
 // --- Lending ---
 
 export const addLend = async (userId, data) => {
@@ -202,6 +231,125 @@ export const deleteSip = async (id) => {
     await deleteDoc(doc(db, SIPS_COLLECTION, id));
   } catch (error) {
     console.error("Error deleting SIP: ", error);
+    throw error;
+  }
+};
+
+// --- Pocket Notes / Side Cash ---
+
+const POCKET_COLLECTION = "pocketNotes";
+
+export const addPocketEntry = async (userId, data) => {
+  try {
+    const docRef = await addDoc(collection(db, POCKET_COLLECTION), {
+      ...data,
+      userId,
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding pocket entry: ", error);
+    throw error;
+  }
+};
+
+export const getPocketEntries = async (userId) => {
+  try {
+    const q = query(
+      collection(db, POCKET_COLLECTION),
+      where("userId", "==", userId)
+    );
+    const querySnapshot = await getDocs(q);
+    const entries = [];
+    querySnapshot.forEach((doc) => {
+      entries.push({ id: doc.id, ...doc.data() });
+    });
+    return entries.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+  } catch (error) {
+    console.error("Error getting pocket entries: ", error);
+    throw error;
+  }
+};
+
+export const deletePocketEntry = async (id) => {
+  try {
+    await deleteDoc(doc(db, POCKET_COLLECTION, id));
+  } catch (error) {
+    console.error("Error deleting pocket entry: ", error);
+    throw error;
+  }
+};
+
+// --- All-Time Financial Summary ---
+
+export const getAllTimeSummary = async (userId) => {
+  try {
+    // 1. Transactions
+    const txQ = query(collection(db, TRANSACTIONS_COLLECTION), where("userId", "==", userId));
+    const txSnap = await getDocs(txQ);
+    let totalIncome = 0;
+    let totalExpense = 0;
+    const categoryTotals = {};
+
+    txSnap.forEach(doc => {
+      const d = doc.data();
+      if (d.type === 'income') {
+        totalIncome += d.amount || 0;
+      } else {
+        totalExpense += d.amount || 0;
+        if (d.category) {
+          categoryTotals[d.category] = (categoryTotals[d.category] || 0) + (d.amount || 0);
+        }
+      }
+    });
+
+    // 2. Lends (pending to receive)
+    const lendQ = query(collection(db, LENDING_COLLECTION), where("userId", "==", userId));
+    const lendSnap = await getDocs(lendQ);
+    let pendingLend = 0;
+    lendSnap.forEach(doc => {
+      const d = doc.data();
+      if (d.status === 'pending') {
+        pendingLend += d.amount || 0;
+      }
+    });
+
+    // 3. SIPs
+    const sipQ = query(collection(db, SIPS_COLLECTION), where("userId", "==", userId));
+    const sipSnap = await getDocs(sipQ);
+    let totalSip = 0;
+    sipSnap.forEach(doc => {
+      totalSip += doc.data().amount || 0;
+    });
+
+    // 4. Pocket Notes (Side Cash)
+    const pQ = query(collection(db, POCKET_COLLECTION), where("userId", "==", userId));
+    const pSnap = await getDocs(pQ);
+    let sideReceived = 0;
+    let sideSpent = 0;
+    pSnap.forEach(doc => {
+      const d = doc.data();
+      if (d.type === 'received') sideReceived += d.amount || 0;
+      if (d.type === 'spent') sideSpent += d.amount || 0;
+    });
+
+    const netBalance = totalIncome - totalExpense;
+    const sideBalance = sideReceived - sideSpent;
+    const netWorth = netBalance + sideBalance + pendingLend;
+
+    return {
+      totalIncome,
+      totalExpense,
+      netBalance,
+      pendingLend,
+      totalSip,
+      sideBalance,
+      netWorth,
+      categoryTotals,
+      totalTxnsCount: txSnap.size
+    };
+  } catch (error) {
+    console.error("Error getting all-time summary: ", error);
     throw error;
   }
 };

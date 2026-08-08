@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { addMonths, subMonths, format } from 'date-fns';
-import { ChevronLeft, ChevronRight, LayoutDashboard, LogOut, Wallet, Users, TrendingUp, PieChart } from 'lucide-react';
+import { addMonths, subMonths, format, isSameMonth } from 'date-fns';
+import { ChevronLeft, ChevronRight, LayoutDashboard, LogOut, Wallet, Users, TrendingUp, PieChart, NotebookPen, Calendar, User } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import toast from 'react-hot-toast';
@@ -11,13 +11,17 @@ import TransactionList from './TransactionList';
 import LendingTab from './LendingTab';
 import SipTab from './SipTab';
 import AnalyticsTab from './AnalyticsTab';
+import PocketNotesTab from './PocketNotesTab';
+import ProfileModal from './ProfileModal';
 
-import { addTransaction, getTransactionsForMonth, deleteTransaction, getUserCategories, addUserCategory } from '../lib/expenseService';
+import { addTransaction, getTransactionsForMonth, deleteTransaction, getUserCategories, addUserCategory, getBudgetGoal, setBudgetGoal } from '../lib/expenseService';
 
 export default function Dashboard({ user }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState('overview');
   const [previousBalance, setPreviousBalance] = useState(0); // overview, lending, sips
+  const [budgetGoal, setBudgetGoalState] = useState(0);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   const [transactions, setTransactions] = useState([]);
   const [customCategories, setCustomCategories] = useState([]);
@@ -35,6 +39,9 @@ export default function Dashboard({ user }) {
       
       const categories = await getUserCategories(user.uid);
       setCustomCategories(categories);
+
+      const goal = await getBudgetGoal(user.uid);
+      setBudgetGoalState(goal);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch data. Make sure Firestore is configured properly.");
@@ -49,6 +56,18 @@ export default function Dashboard({ user }) {
 
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const handleJumpToCurrentMonth = () => setCurrentDate(new Date());
+
+  const handleSaveBudgetGoal = async (newGoal) => {
+    try {
+      await setBudgetGoal(user.uid, newGoal);
+      setBudgetGoalState(newGoal);
+      toast.success('Monthly budget updated!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update budget');
+    }
+  };
 
   const handleAddCustomCategory = async (categoryName) => {
     try {
@@ -94,7 +113,7 @@ export default function Dashboard({ user }) {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 selection:bg-emerald-500/30">
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-4 sm:py-8">
         
         <header className="flex flex-col md:flex-row md:items-center justify-between mb-6 sm:mb-8 gap-4 sm:gap-6">
           <div className="flex items-center justify-between w-full md:w-auto">
@@ -146,16 +165,38 @@ export default function Dashboard({ user }) {
               >
                 <TrendingUp className="w-4 h-4" /> SIPs
               </button>
+              <button 
+                onClick={() => setActiveTab('pocket')}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-colors whitespace-nowrap ${activeTab === 'pocket' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+              >
+                <NotebookPen className="w-4 h-4" /> Pocket Notes
+              </button>
             </div>
 
-            {/* Desktop Sign Out Button */}
-            <button
-              onClick={handleSignOut}
-              className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-xl border border-slate-700/50 hover:border-rose-500/50 transition-all font-bold text-sm shrink-0"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </button>
+            {/* User Profile & Sign Out Buttons */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsProfileOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/50 hover:border-emerald-500/50 transition-all font-bold text-xs shadow-md"
+                title="View Complete Financial Summary & Profile"
+              >
+                <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center font-extrabold text-xs">
+                  {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <span className="hidden sm:inline truncate max-w-[120px]">{user?.email?.split('@')[0]}</span>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded-md">
+                  Profile
+                </span>
+              </button>
+
+              <button
+                onClick={handleSignOut}
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-xl border border-slate-700/50 hover:border-rose-500/50 transition-all font-bold text-xs shrink-0"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </div>
           </div>
         </header>
 
@@ -168,25 +209,36 @@ export default function Dashboard({ user }) {
         {/* Tab Content */}
         {activeTab === 'overview' && (
           <>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-wrap items-center justify-between mb-6 gap-3">
               <h2 className="text-xl font-bold">Monthly Overview</h2>
               {/* Month Selector */}
-              <div className="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700/50 shadow-inner">
-                <button 
-                  onClick={handlePrevMonth}
-                  className="p-2 hover:bg-slate-700 rounded-md transition-colors text-slate-400 hover:text-white"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <span className="w-32 text-center font-semibold text-slate-200">
-                  {format(currentDate, 'MMMM yyyy')}
-                </span>
-                <button 
-                  onClick={handleNextMonth}
-                  className="p-2 hover:bg-slate-700 rounded-md transition-colors text-slate-400 hover:text-white"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+              <div className="flex items-center gap-2">
+                {!isSameMonth(currentDate, new Date()) && (
+                  <button
+                    onClick={handleJumpToCurrentMonth}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20 transition-all"
+                    title="Jump to Current Month"
+                  >
+                    <Calendar className="w-3.5 h-3.5" /> Today
+                  </button>
+                )}
+                <div className="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700/50 shadow-inner">
+                  <button 
+                    onClick={handlePrevMonth}
+                    className="p-2 hover:bg-slate-700 rounded-md transition-colors text-slate-400 hover:text-white"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <span className="w-32 text-center font-semibold text-slate-200">
+                    {format(currentDate, 'MMMM yyyy')}
+                  </span>
+                  <button 
+                    onClick={handleNextMonth}
+                    className="p-2 hover:bg-slate-700 rounded-md transition-colors text-slate-400 hover:text-white"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -194,31 +246,51 @@ export default function Dashboard({ user }) {
               transactions={transactions} 
               currentDate={currentDate} 
               previousBalance={previousBalance}
+              budgetGoal={budgetGoal}
+              onSaveBudgetGoal={handleSaveBudgetGoal}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-              <div className="lg:col-span-1">
-                <AddTransaction 
-                  onAddTransaction={handleAddTransaction} 
-                  isLoading={isAdding} 
-                  customCategories={customCategories}
-                  onAddCustomCategory={handleAddCustomCategory}
-                />
-              </div>
-              <div className="lg:col-span-2">
-                <TransactionList 
-                  transactions={transactions} 
-                  onDeleteTransaction={handleDeleteTransaction}
-                  isLoading={isLoading}
-                />
-              </div>
-            </div>
+            {(() => {
+              const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+              const totalExpense = transactions.filter(t => t.type !== 'income').reduce((sum, t) => sum + t.amount, 0);
+              const currentBalance = previousBalance + totalIncome - totalExpense;
+
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                  <div className="lg:col-span-1">
+                    <AddTransaction 
+                      onAddTransaction={handleAddTransaction} 
+                      isLoading={isAdding} 
+                      customCategories={customCategories}
+                      onAddCustomCategory={handleAddCustomCategory}
+                    />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <TransactionList 
+                      transactions={transactions} 
+                      onDeleteTransaction={handleDeleteTransaction}
+                      isLoading={isLoading}
+                      currentBalance={currentBalance}
+                      previousBalance={previousBalance}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
           </>
         )}
 
         {activeTab === 'analytics' && <AnalyticsTab transactions={transactions} />}
         {activeTab === 'lending' && <LendingTab user={user} />}
         {activeTab === 'sips' && <SipTab user={user} />}
+        {activeTab === 'pocket' && <PocketNotesTab user={user} />}
+
+        {/* User Profile & Financial Portfolio Modal */}
+        <ProfileModal
+          user={user}
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+        />
 
       </div>
     </div>

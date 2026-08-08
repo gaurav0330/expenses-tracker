@@ -85,15 +85,15 @@ export default function LendingTab({ user }) {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Left Column - Form & Stats */}
       <div className="lg:col-span-1 space-y-6">
-        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 sm:p-6 shadow-xl shadow-indigo-900/20 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-5 sm:p-6 shadow-xl shadow-indigo-950/30 text-white relative overflow-hidden">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
           <div className="relative z-10">
-            <h3 className="font-medium text-indigo-50 text-sm tracking-wider uppercase mb-2">Total Pending (To Receive)</h3>
-            <span className="text-3xl font-bold tracking-tight">{formatINR(pendingTotal)}</span>
+            <h3 className="font-semibold text-indigo-100 text-xs tracking-wider uppercase mb-2">Total Pending (To Receive)</h3>
+            <span className="text-3xl font-extrabold tracking-tight font-amount">{formatINR(pendingTotal)}</span>
           </div>
         </div>
 
-        <div className="bg-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-700/50">
+        <div className="bg-[#111827] rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800/80">
           <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
             <PlusCircle className="w-6 h-6 text-indigo-400" />
             New Lending Entry
@@ -101,7 +101,7 @@ export default function LendingTab({ user }) {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">Who did you lend to?</label>
-              <input type="text" required value={person} onChange={(e) => setPerson(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner" placeholder="Name" />
+              <input type="text" required value={person} onChange={(e) => setPerson(e.target.value)} className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner" placeholder="Name" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">Amount (₹)</label>
@@ -116,19 +116,19 @@ export default function LendingTab({ user }) {
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
                 }}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner" 
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg font-amount shadow-inner" 
                 placeholder="0.00" 
               />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">Description (Optional)</label>
-              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner" placeholder="Reason" />
+              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner" placeholder="Reason" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">Date</label>
-              <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner [color-scheme:dark]" />
+              <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white text-lg shadow-inner [color-scheme:dark]" />
             </div>
-            <button type="submit" disabled={isAdding} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-4 rounded-xl mt-8 shadow-xl shadow-indigo-500/20 flex justify-center text-lg transition-all active:scale-[0.98]">
+            <button type="submit" disabled={isAdding} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl mt-8 shadow-xl shadow-indigo-600/20 flex justify-center text-lg transition-all active:scale-[0.98]">
               {isAdding ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Save Entry'}
             </button>
           </form>
@@ -136,7 +136,7 @@ export default function LendingTab({ user }) {
       </div>
 
       {/* Right Column - List */}
-      <div className="lg:col-span-2 bg-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-700/50 flex flex-col min-h-[400px]">
+      <div className="lg:col-span-2 bg-[#111827] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 flex flex-col h-[580px] max-h-[80vh] overflow-hidden">
         <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
           <Users className="w-5 h-5 text-indigo-400" />
           Active Lending Records
@@ -155,7 +155,7 @@ export default function LendingTab({ user }) {
             <p className="text-slate-500 mt-1">You haven't lent any money to anyone yet.</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
             {lends.map((lend) => (
               <div key={lend.id} className="group bg-slate-900/50 hover:bg-slate-900 rounded-xl p-4 flex items-center justify-between border border-transparent hover:border-slate-700 transition-all">
                 <div className="flex items-center gap-4">
