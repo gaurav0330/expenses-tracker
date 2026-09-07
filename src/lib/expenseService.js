@@ -219,7 +219,7 @@ export const getSips = async (userId) => {
     querySnapshot.forEach((doc) => {
       sips.push({ id: doc.id, ...doc.data() });
     });
-    return sips.sort((a, b) => a.deductionDate - b.deductionDate);
+    return sips.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0) || (a.deductionDate || 0) - (b.deductionDate || 0));
   } catch (error) {
     console.error("Error getting SIPs: ", error);
     throw error;
@@ -231,6 +231,15 @@ export const deleteSip = async (id) => {
     await deleteDoc(doc(db, SIPS_COLLECTION, id));
   } catch (error) {
     console.error("Error deleting SIP: ", error);
+    throw error;
+  }
+};
+
+export const updateSip = async (id, data) => {
+  try {
+    await updateDoc(doc(db, SIPS_COLLECTION, id), data);
+  } catch (error) {
+    console.error("Error updating SIP: ", error);
     throw error;
   }
 };
