@@ -309,7 +309,7 @@ export default function PocketNotesTab({ user }) {
               <p className="text-slate-500 mt-1 max-w-[250px]">Keep money received from your father or separate notes isolated here!</p>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto max-h-[460px] space-y-4 pr-2 custom-scrollbar">
               {filteredEntries.map((item) => {
                 const isRec = item.type === 'received';
                 const isSpent = item.type === 'spent';

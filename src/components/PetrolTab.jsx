@@ -12,6 +12,7 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Form state
   const [eventType, setEventType] = useState('refuel'); // 'refuel' (Fill Petrol) or 'reserve' (Hit Reserve)
@@ -112,6 +113,7 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
       setAmount('');
       setLiters('');
       setDate(TODAY);
+      setIsAddModalOpen(false);
       await fetchLogs();
     } catch (error) {
       console.error(error);
@@ -298,18 +300,213 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
         </div>
       </div>
 
-      {/* Main Grid: Left Form & Right Log History */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - New Petrol / Reserve Entry Form */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-[#111827] rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800/80">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <PlusCircle className="w-6 h-6 text-amber-400" />
-              Log Petrol / Reserve
+      {/* Main Full-Width Log History Section */}
+      <div className="bg-[#111827] rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800/80 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
+              <Fuel className="w-6 h-6 text-amber-400" />
+              Petrol & Reserve History
             </h2>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium mt-1">
+              Track fuel refills, reserve milestones, and trip distance deltas
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center justify-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-bold text-sm shadow-xl shadow-amber-500/20 transition-all active:scale-98 shrink-0"
+          >
+            <PlusCircle className="w-5 h-5" />
+            Log Petrol / Reserve
+          </button>
+        </div>
+
+        {isLoading ? (
+          <div className="py-20 flex justify-center items-center">
+            <div className="w-10 h-10 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+          </div>
+        ) : displayLogs.length === 0 ? (
+          <div className="py-20 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
+              <Gauge className="w-8 h-8 text-slate-600" />
+            </div>
+            <h3 className="text-lg font-medium text-slate-300">No petrol logs found</h3>
+            <p className="text-slate-500 mt-1 max-w-sm">Click "+ Log Petrol / Reserve" above to start tracking your bike mileage!</p>
+          </div>
+        ) : (
+          <div className="max-h-[460px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
+            {displayLogs.map((log) => (
+              <div key={log.id} className="group bg-slate-900/60 hover:bg-slate-900 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-800/80 hover:border-slate-700 transition-all gap-4">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center border shrink-0 ${
+                    log.type === 'reserve'
+                      ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  }`}>
+                    {log.type === 'reserve' ? <Flame className="w-6 h-6" /> : <Fuel className="w-6 h-6" />}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-bold text-slate-100 text-base">
+                        {log.type === 'reserve' ? 'Hit Reserve' : 'Petrol Fill'}
+                      </h4>
+                      <span className="text-xs px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 font-semibold border border-slate-700/60">
+                        {log.vehicleName || 'My Bike'}
+                      </span>
+
+                      {log.type === 'refuel' && (
+                        log.isPaidByMe !== false ? (
+                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            Paid by Me (Deducted)
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                            Paid by Friend (No Impact)
+                          </span>
+                        )
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-800 text-amber-300 flex items-center gap-1 border border-amber-500/20">
+                        <Gauge className="w-3.5 h-3.5 text-amber-400" />
+                        {log.odometer?.toLocaleString()} km
+                      </span>
+                      
+                      {log.distanceDelta > 0 && (
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-800 text-emerald-400 flex items-center gap-1 border border-emerald-500/20">
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                          +{log.distanceDelta} km trip
+                        </span>
+                      )}
+
+                      <span className="text-xs font-medium px-2 py-1 rounded-md bg-slate-800/80 text-slate-400 flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        {log.date}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-5 justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-800">
+                  {/* Mileage Badge if computed */}
+                  {log.legMileage && (
+                    <div className="text-right">
+                      <span className="text-xs font-semibold uppercase text-slate-400 block">Mileage</span>
+                      <span className="text-base font-extrabold text-amber-400 font-amount">{log.legMileage} km/L</span>
+                    </div>
+                  )}
+
+                  {/* Amount & Liters */}
+                  <div className="text-right">
+                    {log.type === 'refuel' ? (
+                      <>
+                        <span className="font-bold text-lg text-slate-200 block">{formatINR(log.amount)}</span>
+                        <span className="text-xs text-slate-400 block font-amount">{log.liters} L</span>
+                      </>
+                    ) : (
+                      <span className="text-xs font-bold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20">
+                        RESERVE
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => openEditModal(log)}
+                      className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-400/10 rounded-lg transition-all"
+                      title="Edit log"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(log)}
+                      className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-all"
+                      title="Delete log"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Analytics & Charts Section */}
+      {chartData.length > 0 && (
+        <div className="bg-[#111827] rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800/80 space-y-6">
+          <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+            <Gauge className="w-5 h-5 text-amber-400" />
+            Fuel & Mileage Analytics
+          </h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Mileage Trend Line Chart */}
+            <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+              <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-amber-400" />
+                Mileage Performance Trend (km / L)
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
+                    <YAxis stroke="#64748b" fontSize={12} unit=" km/L" />
+                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff' }} />
+                    <Line type="monotone" dataKey="mileage" stroke="#f59e0b" strokeWidth={3} dot={{ fill: '#f59e0b', r: 5 }} name="Mileage (km/L)" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Petrol Expenses Bar Chart */}
+            <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+              <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                <Fuel className="w-4 h-4 text-emerald-400" />
+                Fuel Expense & Volume Fill
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
+                    <YAxis stroke="#64748b" fontSize={12} />
+                    <Tooltip 
+                      formatter={(val, name) => [name === 'amount' ? formatINR(val) : `${val} L`, name === 'amount' ? 'Amount Spent' : 'Liters']}
+                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff' }} 
+                    />
+                    <Bar dataKey="amount" fill="#10b981" radius={[6, 6, 0, 0]} name="Amount (₹)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- ADD PETROL MODAL --- */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
+          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <PlusCircle className="w-6 h-6 text-amber-400" />
+                Log Petrol / Reserve
+              </h3>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
             {/* Event Type Selector Tabs */}
-            <div className="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-xl mb-6 border border-slate-800">
+            <div className="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
               <button
                 type="button"
                 onClick={() => setEventType('refuel')}
@@ -452,202 +649,33 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
                 </>
               )}
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full font-bold py-4 rounded-xl mt-6 shadow-xl flex justify-center text-lg transition-all active:scale-[0.98] text-white ${
-                  eventType === 'refuel'
-                    ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/20'
-                    : 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/20'
-                }`}
-              >
-                {isSubmitting ? (
-                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : eventType === 'refuel' ? (
-                  'Save Petrol Fill'
-                ) : (
-                  'Log Reserve Hit'
-                )}
-              </button>
+              <div className="flex items-center gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`flex-1 font-bold py-3.5 rounded-xl shadow-xl flex justify-center text-lg transition-all active:scale-[0.98] text-white ${
+                    eventType === 'refuel'
+                      ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/20'
+                      : 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/20'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : eventType === 'refuel' ? (
+                    'Save Petrol Fill'
+                  ) : (
+                    'Log Reserve Hit'
+                  )}
+                </button>
+              </div>
             </form>
-          </div>
-        </div>
-
-        {/* Right Column - Log History */}
-        <div className="lg:col-span-2 bg-[#111827] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 flex flex-col h-[600px] overflow-hidden">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Fuel className="w-5 h-5 text-amber-400" />
-              Petrol & Reserve Log History
-            </h2>
-            <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
-              {logs.length} total entries
-            </span>
-          </div>
-
-          {isLoading ? (
-            <div className="flex-1 flex justify-center items-center">
-              <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
-            </div>
-          ) : displayLogs.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
-                <Gauge className="w-8 h-8 text-slate-600" />
-              </div>
-              <h3 className="text-lg font-medium text-slate-300">No petrol logs found</h3>
-              <p className="text-slate-500 mt-1 max-w-sm">Log your petrol fills or reserve events to start tracking bike mileage.</p>
-            </div>
-          ) : (
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
-              {displayLogs.map((log) => (
-                <div key={log.id} className="group bg-slate-900/50 hover:bg-slate-900 rounded-xl p-4 flex items-center justify-between border border-transparent hover:border-slate-700 transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border shrink-0 ${
-                      log.type === 'reserve'
-                        ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                    }`}>
-                      {log.type === 'reserve' ? <Flame className="w-6 h-6" /> : <Fuel className="w-6 h-6" />}
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-semibold text-slate-200">
-                          {log.type === 'reserve' ? 'Hit Reserve' : 'Petrol Fill'}
-                        </h4>
-                        <span className="text-xs px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 font-medium">
-                          {log.vehicleName || 'My Bike'}
-                        </span>
-
-                        {log.type === 'refuel' && (
-                          log.isPaidByMe !== false ? (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                              Paid by Me (Deducted)
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                              Paid by Friend (No Impact)
-                            </span>
-                          )
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                        <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-800 text-amber-300 flex items-center gap-1 border border-amber-500/20">
-                          <Gauge className="w-3.5 h-3.5 text-amber-400" />
-                          {log.odometer?.toLocaleString()} km
-                        </span>
-                        
-                        {log.distanceDelta > 0 && (
-                          <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-slate-800 text-emerald-400 flex items-center gap-1 border border-emerald-500/20">
-                            <ArrowUpRight className="w-3.5 h-3.5" />
-                            +{log.distanceDelta} km trip
-                          </span>
-                        )}
-
-                        <span className="text-xs font-medium px-2 py-1 rounded-md bg-slate-800/80 text-slate-400 flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          {log.date}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-5">
-                    {/* Mileage Badge if computed */}
-                    {log.legMileage && (
-                      <div className="text-right hidden sm:block">
-                        <span className="text-xs font-semibold uppercase text-slate-400 block">Mileage</span>
-                        <span className="text-base font-extrabold text-amber-400 font-amount">{log.legMileage} km/L</span>
-                      </div>
-                    )}
-
-                    {/* Amount & Liters */}
-                    <div className="text-right">
-                      {log.type === 'refuel' ? (
-                        <>
-                          <span className="font-bold text-lg text-slate-200 block">{formatINR(log.amount)}</span>
-                          <span className="text-xs text-slate-400 block font-amount">{log.liters} L</span>
-                        </>
-                      ) : (
-                        <span className="text-xs font-bold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20">
-                          RESERVE
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
-                      <button
-                        onClick={() => openEditModal(log)}
-                        className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-400/10 rounded-lg transition-all"
-                        title="Edit log"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(log)}
-                        className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-all"
-                        title="Delete log"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Analytics & Charts Section */}
-      {chartData.length > 0 && (
-        <div className="bg-[#111827] rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800/80 space-y-6">
-          <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-            <Gauge className="w-5 h-5 text-amber-400" />
-            Fuel & Mileage Analytics
-          </h2>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Mileage Trend Line Chart */}
-            <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-              <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-amber-400" />
-                Mileage Performance Trend (km / L)
-              </h3>
-              <div className="h-60">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
-                    <YAxis stroke="#64748b" fontSize={12} unit=" km/L" />
-                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff' }} />
-                    <Line type="monotone" dataKey="mileage" stroke="#f59e0b" strokeWidth={3} dot={{ fill: '#f59e0b', r: 5 }} name="Mileage (km/L)" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Petrol Expenses Bar Chart */}
-            <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-              <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
-                <Fuel className="w-4 h-4 text-emerald-400" />
-                Fuel Expense & Volume Fill
-              </h3>
-              <div className="h-60">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
-                    <YAxis stroke="#64748b" fontSize={12} />
-                    <Tooltip 
-                      formatter={(val, name) => [name === 'amount' ? formatINR(val) : `${val} L`, name === 'amount' ? 'Amount Spent' : 'Liters']}
-                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff' }} 
-                    />
-                    <Bar dataKey="amount" fill="#10b981" radius={[6, 6, 0, 0]} name="Amount (₹)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -655,7 +683,7 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
       {/* --- EDIT LOG MODAL --- */}
       {editingLog && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6">
+          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Pencil className="w-5 h-5 text-amber-400" />
@@ -717,30 +745,48 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
               </div>
 
               {editEventType === 'refuel' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-300 mb-2">Amount (₹)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      value={editAmount}
-                      onChange={(e) => setEditAmount(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-3.5 text-white font-amount text-lg shadow-inner"
-                    />
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-300 mb-2">Amount (₹)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-3.5 text-white font-amount text-lg shadow-inner"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-300 mb-2">Liters (L)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        value={editLiters}
+                        onChange={(e) => setEditLiters(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-3.5 text-white font-amount text-lg shadow-inner"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-300 mb-2">Liters (L)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      value={editLiters}
-                      onChange={(e) => setEditLiters(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-3.5 text-white font-amount text-lg shadow-inner"
-                    />
+
+                  <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editIsPaidByMe}
+                        onChange={(e) => setEditIsPaidByMe(e.target.checked)}
+                        className="w-4 h-4 mt-0.5 accent-amber-500 rounded shrink-0"
+                      />
+                      <div>
+                        <span className="text-xs font-bold text-slate-200 block">
+                          Deduct from my Account Balance? (Paid by me)
+                        </span>
+                      </div>
+                    </label>
                   </div>
-                </div>
+                </>
               )}
 
               <div className="flex items-center gap-3 pt-4 border-t border-slate-800">

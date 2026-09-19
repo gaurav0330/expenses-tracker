@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-[#0B0F19] text-slate-100 antialiased selection:bg-emerald-500/30 font-sans;
-  }
-
-  /* Smooth scroll behavior */
   html {
     scroll-behavior: smooth;
+    font-size: 14.5px;
+  }
+
+  body {
+    @apply bg-[#0B0F19] text-slate-100 antialiased selection:bg-emerald-500/30 font-sans;
   }
 
   /* Hide number input spin buttons */
@@ -32,23 +32,24 @@
 
   /* Custom Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(11, 15, 25, 0.6);
-    border-radius: 8px;
+    background: #0f172a;
+    border-radius: 9999px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #1E293B;
-    border-radius: 8px;
+    background: #475569;
+    border-radius: 9999px;
+    border: 1px solid #1e293b;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #334155;
+    background: #64748b;
   }
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #1E293B rgba(11, 15, 25, 0.6);
+    scrollbar-color: #475569 #0f172a;
   }
 
   /* Keyframe animations */
