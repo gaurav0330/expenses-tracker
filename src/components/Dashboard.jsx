@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { addMonths, subMonths, format, isSameMonth } from 'date-fns';
-import { ChevronLeft, ChevronRight, LayoutDashboard, LogOut, Wallet, Users, TrendingUp, PieChart, NotebookPen, Calendar, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutDashboard, LogOut, Wallet, Users, TrendingUp, PieChart, NotebookPen, Calendar, User, Fuel } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import toast from 'react-hot-toast';
@@ -12,6 +12,7 @@ import LendingTab from './LendingTab';
 import SipTab from './SipTab';
 import AnalyticsTab from './AnalyticsTab';
 import PocketNotesTab from './PocketNotesTab';
+import PetrolTab from './PetrolTab';
 import ProfileModal from './ProfileModal';
 
 import { addTransaction, getTransactionsForMonth, deleteTransaction, getUserCategories, addUserCategory, getBudgetGoal, setBudgetGoal } from '../lib/expenseService';
@@ -83,11 +84,11 @@ export default function Dashboard({ user }) {
   const handleAddTransaction = async (transactionData) => {
     setIsAdding(true);
     try {
-      await addTransaction(user.uid, transactionData);
+      const newId = await addTransaction(user.uid, transactionData);
       const { transactions, previousBalance } = await getTransactionsForMonth(user.uid, currentDate);
       setTransactions(transactions);
       setPreviousBalance(previousBalance);
-      // Toast success is handled inside AddTransaction
+      return newId;
     } catch (err) {
       console.error(err);
       toast.error("Failed to add transaction.");
@@ -115,75 +116,28 @@ export default function Dashboard({ user }) {
     <div className="min-h-screen bg-slate-900 text-slate-200 selection:bg-emerald-500/30">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-4 sm:py-8">
         
-        <header className="flex flex-col md:flex-row md:items-center justify-between mb-6 sm:mb-8 gap-4 sm:gap-6">
-          <div className="flex items-center justify-between w-full md:w-auto">
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 sm:mb-8 gap-4 lg:gap-6">
+          <div className="flex items-center justify-between w-full lg:w-auto shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <LayoutDashboard className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+                <LayoutDashboard className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-white">ExpenseTracker</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight">ExpenseTracker</h1>
                 <p className="text-slate-400 text-xs sm:text-sm font-medium">Manage your money wisely</p>
               </div>
             </div>
             
-            {/* Mobile Sign Out Button */}
-            <button
-              onClick={handleSignOut}
-              className="md:hidden flex items-center justify-center w-10 h-10 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-xl border border-slate-700/50 transition-all shrink-0"
-              title="Sign Out"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="flex flex-wrap md:flex-nowrap items-center gap-4">
-            
-            {/* Tab Navigation */}
-            <div className="flex w-full md:w-auto bg-slate-800 rounded-xl p-1.5 border border-slate-700/50 shadow-inner overflow-x-auto custom-scrollbar">
-              <button 
-                onClick={() => setActiveTab('overview')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-colors whitespace-nowrap ${activeTab === 'overview' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
-              >
-                <Wallet className="w-4 h-4" /> Overview
-              </button>
-              <button 
-                onClick={() => setActiveTab('analytics')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-colors whitespace-nowrap ${activeTab === 'analytics' ? 'bg-purple-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
-              >
-                <PieChart className="w-4 h-4" /> Analytics
-              </button>
-              <button 
-                onClick={() => setActiveTab('lending')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-colors whitespace-nowrap ${activeTab === 'lending' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
-              >
-                <Users className="w-4 h-4" /> Lending
-              </button>
-              <button 
-                onClick={() => setActiveTab('sips')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-colors whitespace-nowrap ${activeTab === 'sips' ? 'bg-cyan-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
-              >
-                <TrendingUp className="w-4 h-4" /> SIPs
-              </button>
-              <button 
-                onClick={() => setActiveTab('pocket')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-colors whitespace-nowrap ${activeTab === 'pocket' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
-              >
-                <NotebookPen className="w-4 h-4" /> Pocket Notes
-              </button>
-            </div>
-
-            {/* User Profile & Sign Out Buttons */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Mobile / Tablet Controls */}
+            <div className="flex lg:hidden items-center gap-2">
               <button
                 onClick={() => setIsProfileOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/50 hover:border-emerald-500/50 transition-all font-bold text-xs shadow-md"
-                title="View Complete Financial Summary & Profile"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/50 transition-all font-bold text-xs shadow-md"
+                title="View Profile & Financial Summary"
               >
-                <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center font-extrabold text-xs">
+                <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center font-extrabold text-[10px]">
                   {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
                 </div>
-                <span className="hidden sm:inline truncate max-w-[120px]">{user?.email?.split('@')[0]}</span>
                 <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded-md">
                   Profile
                 </span>
@@ -191,7 +145,74 @@ export default function Dashboard({ user }) {
 
               <button
                 onClick={handleSignOut}
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-xl border border-slate-700/50 hover:border-rose-500/50 transition-all font-bold text-xs shrink-0"
+                className="p-2 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-xl border border-slate-700/50 transition-all shrink-0"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 w-full lg:w-auto overflow-hidden">
+            {/* Tab Navigation */}
+            <div className="flex w-full lg:w-auto bg-slate-800/90 rounded-xl p-1 sm:p-1.5 border border-slate-700/50 shadow-inner overflow-x-auto custom-scrollbar shrink min-w-0">
+              <button 
+                onClick={() => setActiveTab('overview')}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'overview' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+              >
+                <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Overview
+              </button>
+              <button 
+                onClick={() => setActiveTab('analytics')}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'analytics' ? 'bg-purple-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+              >
+                <PieChart className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Analytics
+              </button>
+              <button 
+                onClick={() => setActiveTab('lending')}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'lending' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+              >
+                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Lending
+              </button>
+              <button 
+                onClick={() => setActiveTab('sips')}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'sips' ? 'bg-cyan-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+              >
+                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> SIPs
+              </button>
+              <button 
+                onClick={() => setActiveTab('pocket')}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'pocket' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+              >
+                <NotebookPen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Pocket Notes
+              </button>
+              <button 
+                onClick={() => setActiveTab('petrol')}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'petrol' ? 'bg-orange-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+              >
+                <Fuel className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Fuel & Mileage
+              </button>
+            </div>
+
+            {/* Desktop User Profile & Sign Out Buttons */}
+            <div className="hidden lg:flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsProfileOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/50 hover:border-emerald-500/50 transition-all font-bold text-xs shadow-md whitespace-nowrap"
+                title="View Complete Financial Summary & Profile"
+              >
+                <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center font-extrabold text-xs shrink-0">
+                  {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <span className="truncate max-w-[100px]">{user?.email?.split('@')[0]}</span>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded-md">
+                  Profile
+                </span>
+              </button>
+
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-xl border border-slate-700/50 hover:border-rose-500/50 transition-all font-bold text-xs shrink-0 whitespace-nowrap"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out
@@ -284,6 +305,7 @@ export default function Dashboard({ user }) {
         {activeTab === 'lending' && <LendingTab user={user} />}
         {activeTab === 'sips' && <SipTab user={user} />}
         {activeTab === 'pocket' && <PocketNotesTab user={user} />}
+        {activeTab === 'petrol' && <PetrolTab user={user} onSyncExpense={handleAddTransaction} onDeleteExpense={handleDeleteTransaction} />}
 
         {/* User Profile & Financial Portfolio Modal */}
         <ProfileModal

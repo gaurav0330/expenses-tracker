@@ -176,7 +176,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
                   {isIncome ? <ArrowUpRight className="w-5 h-5" /> : <CategoryIcon category={t.category} className="w-5 h-5" />}
                 </div>
                 <div>
-                  <h4 className="font-medium text-slate-200">
+                  <h4 className="font-semibold text-slate-200 text-sm sm:text-base whitespace-pre-wrap break-words max-w-md">
                     {t.description || (isIncome ? 'Income' : 'Expense')}
                   </h4>
                   <div className="flex items-center gap-2 mt-1">

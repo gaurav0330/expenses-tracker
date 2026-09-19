@@ -362,3 +362,59 @@ export const getAllTimeSummary = async (userId) => {
     throw error;
   }
 };
+
+// --- Petrol & Mileage Tracker ---
+
+const PETROL_COLLECTION = "petrolLogs";
+
+export const addPetrolLog = async (userId, data) => {
+  try {
+    const docRef = await addDoc(collection(db, PETROL_COLLECTION), {
+      ...data,
+      userId,
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding petrol log: ", error);
+    throw error;
+  }
+};
+
+export const getPetrolLogs = async (userId) => {
+  try {
+    const q = query(
+      collection(db, PETROL_COLLECTION),
+      where("userId", "==", userId)
+    );
+    const querySnapshot = await getDocs(q);
+    const logs = [];
+    querySnapshot.forEach((doc) => {
+      logs.push({ id: doc.id, ...doc.data() });
+    });
+    // Sort chronologically (oldest to newest for mileage calculations, or newest first for UI)
+    return logs.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+  } catch (error) {
+    console.error("Error getting petrol logs: ", error);
+    throw error;
+  }
+};
+
+export const deletePetrolLog = async (id) => {
+  try {
+    await deleteDoc(doc(db, PETROL_COLLECTION, id));
+  } catch (error) {
+    console.error("Error deleting petrol log: ", error);
+    throw error;
+  }
+};
+
+export const updatePetrolLog = async (id, data) => {
+  try {
+    await updateDoc(doc(db, PETROL_COLLECTION, id), data);
+  } catch (error) {
+    console.error("Error updating petrol log: ", error);
+    throw error;
+  }
+};
+

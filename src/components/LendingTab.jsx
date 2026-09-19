@@ -163,13 +163,17 @@ export default function LendingTab({ user }) {
                     {lend.status === 'paid' ? <CheckCircle className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-200">{lend.person}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${lend.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-orange-500/10 text-orange-400'}`}>
+                    <h4 className="font-bold text-slate-100 text-base">{lend.person}</h4>
+                    {lend.description && (
+                      <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1.5 whitespace-pre-wrap break-words max-w-md bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-700/50">
+                        {lend.description}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-md border ${lend.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>
                         {lend.status.toUpperCase()}
                       </span>
-                      <span className="text-xs text-slate-500">{format(parseISO(lend.date), 'MMM d, yyyy')}</span>
-                      {lend.description && <span className="text-xs text-slate-500">• {lend.description}</span>}
+                      <span className="text-xs text-slate-400 font-medium">{format(parseISO(lend.date), 'MMM d, yyyy')}</span>
                     </div>
                   </div>
                 </div>
