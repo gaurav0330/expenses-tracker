@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Fuel, Gauge, PlusCircle, Calendar, Trash2, Pencil, Activity, Check, X, Flame, Navigation, ArrowUpRight } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Fuel, Gauge, PlusCircle, Calendar, Trash2, Pencil, Activity, Check, X, Flame, Navigation, ArrowUpRight, Users, UserCheck, Coins } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { addPetrolLog, getPetrolLogs, deletePetrolLog, updatePetrolLog } from '../lib/expenseService';
 import toast from 'react-hot-toast';
 import { formatINR } from '../lib/utils';
@@ -185,19 +185,41 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
 
   let totalSpent = 0;
   let totalLiters = 0;
+  let paidByMeSpent = 0;
+  let paidByMeLiters = 0;
+  let paidByFriendSpent = 0;
+  let paidByFriendLiters = 0;
   let minOdo = Infinity;
   let maxOdo = -Infinity;
 
   chronLogs.forEach((log) => {
     if (log.type === 'refuel') {
-      totalSpent += log.amount || 0;
-      totalLiters += log.liters || 0;
+      const amt = log.amount || 0;
+      const ltrs = log.liters || 0;
+      totalSpent += amt;
+      totalLiters += ltrs;
+
+      if (log.isPaidByMe !== false) {
+        paidByMeSpent += amt;
+        paidByMeLiters += ltrs;
+      } else {
+        paidByFriendSpent += amt;
+        paidByFriendLiters += ltrs;
+      }
     }
     if (log.odometer) {
       if (log.odometer < minOdo) minOdo = log.odometer;
       if (log.odometer > maxOdo) maxOdo = log.odometer;
     }
   });
+
+  const paidByMePct = totalSpent > 0 ? ((paidByMeSpent / totalSpent) * 100).toFixed(1) : '0.0';
+  const paidByFriendPct = totalSpent > 0 ? ((paidByFriendSpent / totalSpent) * 100).toFixed(1) : '0.0';
+
+  const payerPieData = [
+    { name: 'Filled by Me', value: paidByMeSpent, liters: paidByMeLiters, color: '#10b981' },
+    { name: 'Filled by Friend', value: paidByFriendSpent, liters: paidByFriendLiters, color: '#3b82f6' }
+  ].filter(d => d.value > 0 || d.liters > 0);
 
   const totalDistance = (minOdo !== Infinity && maxOdo !== -Infinity && maxOdo > minOdo) ? (maxOdo - minOdo) : 0;
   const avgMileage = (totalLiters > 0 && totalDistance > 0) ? (totalDistance / totalLiters).toFixed(1) : '0.0';
@@ -444,6 +466,60 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
             <Gauge className="w-5 h-5 text-amber-400" />
             Fuel & Mileage Analytics
           </h2>
+
+          {/* Filled By Me vs Filled By Friend Category Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {/* Filled by Me */}
+            <div className="bg-slate-900/80 rounded-2xl p-4 border border-emerald-500/20 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold uppercase text-emerald-400 flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4" /> Filled by Me (Account Impact)
+                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  {paidByMePct}%
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-1">
+                <h4 className="text-2xl font-extrabold text-slate-100 font-amount">{formatINR(paidByMeSpent)}</h4>
+                <span className="text-xs font-semibold text-slate-400 font-amount">{paidByMeLiters.toFixed(2)} L</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-2">Deducted from your account balance</p>
+            </div>
+
+            {/* Filled by Friend */}
+            <div className="bg-slate-900/80 rounded-2xl p-4 border border-blue-500/20 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold uppercase text-blue-400 flex items-center gap-1.5">
+                  <Users className="w-4 h-4" /> Filled by Friend (No Impact)
+                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  {paidByFriendPct}%
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-1">
+                <h4 className="text-2xl font-extrabold text-slate-100 font-amount">{formatINR(paidByFriendSpent)}</h4>
+                <span className="text-xs font-semibold text-slate-400 font-amount">{paidByFriendLiters.toFixed(2)} L</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-2">Paid by friend (no cash deduction)</p>
+            </div>
+
+            {/* Total Monthly Bike Demand */}
+            <div className="bg-slate-900/80 rounded-2xl p-4 border border-amber-500/20 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold uppercase text-amber-400 flex items-center gap-1.5">
+                  <Flame className="w-4 h-4" /> Total Monthly Fuel Needed
+                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  Combined
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-1">
+                <h4 className="text-2xl font-extrabold text-amber-400 font-amount">{formatINR(totalSpent)}</h4>
+                <span className="text-xs font-semibold text-amber-300 font-amount">{totalLiters.toFixed(2)} L</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-2">Overall total petrol used by bike</p>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Mileage Trend Line Chart */}

@@ -2,48 +2,44 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // Helper function to check if user is logged in
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
 
-    // User settings collection (document ID is the user's UID)
+    // User Settings collection (Document ID is user's UID)
     match /userSettings/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Transactions collection
+    // Transactions collection (Income & Expenses)
     match /transactions/{docId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, write: if isAuthenticated();
     }
 
-    // Lending collection
+    // Money Lending collection
     match /lends/{docId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, write: if isAuthenticated();
     }
 
-    // SIPs collection
+    // SIP Investments collection
     match /sips/{docId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, write: if isAuthenticated();
     }
 
-    // Pocket Notes collection
+    // Pocket Notes & Side Cash collection
     match /pocketNotes/{docId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, write: if isAuthenticated();
     }
 
-    // Petrol & Mileage collection
+    // Bike Fuel & Mileage collection
     match /petrolLogs/{docId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, write: if isAuthenticated();
+    }
+
+    // EMI Purchases collection
+    match /emis/{docId} {
+      allow read, write: if isAuthenticated();
     }
   }
 }

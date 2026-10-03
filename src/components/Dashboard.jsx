@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { addMonths, subMonths, format, isSameMonth } from 'date-fns';
-import { ChevronLeft, ChevronRight, LayoutDashboard, LogOut, Wallet, Users, TrendingUp, PieChart, NotebookPen, Calendar, User, Fuel } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutDashboard, LogOut, Wallet, Users, TrendingUp, PieChart, NotebookPen, Calendar, User, Fuel, CreditCard } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import toast from 'react-hot-toast';
@@ -13,6 +13,7 @@ import SipTab from './SipTab';
 import AnalyticsTab from './AnalyticsTab';
 import PocketNotesTab from './PocketNotesTab';
 import PetrolTab from './PetrolTab';
+import EmiTab from './EmiTab';
 import ProfileModal from './ProfileModal';
 
 import { addTransaction, getTransactionsForMonth, deleteTransaction, getUserCategories, addUserCategory, getBudgetGoal, setBudgetGoal } from '../lib/expenseService';
@@ -192,6 +193,12 @@ export default function Dashboard({ user }) {
               >
                 <Fuel className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Fuel & Mileage
               </button>
+              <button 
+                onClick={() => setActiveTab('emis')}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'emis' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+              >
+                <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> EMI Tracker
+              </button>
             </div>
 
             {/* Desktop User Profile & Sign Out Buttons */}
@@ -306,6 +313,7 @@ export default function Dashboard({ user }) {
         {activeTab === 'sips' && <SipTab user={user} />}
         {activeTab === 'pocket' && <PocketNotesTab user={user} />}
         {activeTab === 'petrol' && <PetrolTab user={user} onSyncExpense={handleAddTransaction} onDeleteExpense={handleDeleteTransaction} />}
+        {activeTab === 'emis' && <EmiTab user={user} currentDate={currentDate} onTransactionAdded={() => fetchTransactionsAndCategories(currentDate)} />}
 
         {/* User Profile & Financial Portfolio Modal */}
         <ProfileModal

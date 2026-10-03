@@ -6,6 +6,9 @@ const TRANSACTIONS_COLLECTION = "transactions";
 const SETTINGS_COLLECTION = "userSettings";
 const LENDING_COLLECTION = "lends";
 const SIPS_COLLECTION = "sips";
+const POCKET_COLLECTION = "pocketNotes";
+const PETROL_COLLECTION = "petrolLogs";
+const EMIS_COLLECTION = "emis";
 
 // --- Transactions (Income & Expense) ---
 
@@ -246,8 +249,6 @@ export const updateSip = async (id, data) => {
 
 // --- Pocket Notes / Side Cash ---
 
-const POCKET_COLLECTION = "pocketNotes";
-
 export const addPocketEntry = async (userId, data) => {
   try {
     const docRef = await addDoc(collection(db, POCKET_COLLECTION), {
@@ -365,8 +366,6 @@ export const getAllTimeSummary = async (userId) => {
 
 // --- Petrol & Mileage Tracker ---
 
-const PETROL_COLLECTION = "petrolLogs";
-
 export const addPetrolLog = async (userId, data) => {
   try {
     const docRef = await addDoc(collection(db, PETROL_COLLECTION), {
@@ -414,6 +413,74 @@ export const updatePetrolLog = async (id, data) => {
     await updateDoc(doc(db, PETROL_COLLECTION, id), data);
   } catch (error) {
     console.error("Error updating petrol log: ", error);
+    throw error;
+  }
+};
+
+// --- EMI Tracker ---
+
+export const addEmi = async (userId, data) => {
+  try {
+    const docRef = await addDoc(collection(db, EMIS_COLLECTION), {
+      ...data,
+      userId,
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding EMI: ", error);
+    throw error;
+  }
+};
+
+export const getEmis = async (userId) => {
+  try {
+    const q = query(
+      collection(db, EMIS_COLLECTION),
+      where("userId", "==", userId)
+    );
+    const querySnapshot = await getDocs(q);
+    const emis = [];
+    querySnapshot.forEach((doc) => {
+      emis.push({ id: doc.id, ...doc.data() });
+    });
+    // Sort chronologically by creation or start date
+    return emis.sort((a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate));
+  } catch (error) {
+    console.error("Error getting EMIs: ", error);
+    throw error;
+  }
+};
+
+export const updateEmi = async (id, data) => {
+  try {
+    await updateDoc(doc(db, EMIS_COLLECTION, id), data);
+  } catch (error) {
+    console.error("Error updating EMI: ", error);
+    throw error;
+  }
+};
+
+export const deleteEmi = async (id) => {
+  try {
+    await deleteDoc(doc(db, EMIS_COLLECTION, id));
+  } catch (error) {
+    console.error("Error deleting EMI: ", error);
+    throw error;
+  }
+};
+
+export const payEmiInstallment = async (id, currentPaidCount, totalTenure) => {
+  try {
+    const nextPaidCount = Math.min(totalTenure, (currentPaidCount || 0) + 1);
+    const isCompleted = nextPaidCount >= totalTenure;
+    await updateDoc(doc(db, EMIS_COLLECTION, id), {
+      paidInstallments: nextPaidCount,
+      status: isCompleted ? 'completed' : 'active',
+      lastPaidAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error paying EMI installment: ", error);
     throw error;
   }
 };
