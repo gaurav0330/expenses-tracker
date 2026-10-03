@@ -6,10 +6,14 @@
   html {
     scroll-behavior: smooth;
     font-size: 14.5px;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    @apply bg-[#0B0F19] text-slate-100 antialiased selection:bg-emerald-500/30 font-sans;
+    @apply bg-[#0B0F19] text-slate-100 antialiased selection:bg-emerald-500/30 font-sans min-h-screen;
   }
 
   /* Hide number input spin buttons */
@@ -27,29 +31,48 @@
   /* High contrast numerical currency font styling */
   .font-amount {
     font-family: 'JetBrains Mono', monospace;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
   }
 
-  /* Custom Scrollbar */
+  /* Solid Card Panel styling (No glassmorphism blur) */
+  .solid-card {
+    background: #111827;
+    border: 1px solid #1e293b;
+  }
+
+  /* Ultra-Thin 1px Scrollbar across Overall Application */
+  ::-webkit-scrollbar {
+    width: 1px;
+    height: 1px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #10b981;
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
-    width: 7px;
-    height: 7px;
+    width: 1px;
+    height: 1px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: #0f172a;
-    border-radius: 9999px;
+    background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #475569;
     border-radius: 9999px;
-    border: 1px solid #1e293b;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
+    background: #10b981;
   }
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #475569 #0f172a;
+    scrollbar-color: #475569 transparent;
   }
 
   /* Keyframe animations */

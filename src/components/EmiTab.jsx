@@ -345,7 +345,7 @@ export default function EmiTab({ user, currentDate, onTransactionAdded }) {
             <p className="text-slate-500 mt-1 max-w-sm">Click "+ New EMI Purchase" above to track gadgets or items bought on monthly installment plans.</p>
           </div>
         ) : (
-          <div className="max-h-[460px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
+          <div className="max-h-[380px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
             {displayEmis.map((item) => {
               const paidCount = item.paidInstallments || 0;
               const totalTenure = item.totalTenure || 1;

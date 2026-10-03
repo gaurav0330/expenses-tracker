@@ -73,7 +73,7 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
               <h3 className="font-semibold text-rose-100 text-xs tracking-wider uppercase">
                 Total Spent
               </h3>
-              <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm">
+              <div className="p-2.5 bg-white/20 rounded-xl">
                 <TrendingDown className="w-5 h-5 text-white" />
               </div>
             </div>
@@ -105,7 +105,7 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
               <h3 className="font-semibold text-white/90 text-xs tracking-wider uppercase">
                 Current Balance
               </h3>
-              <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm">
+              <div className="p-2.5 bg-white/20 rounded-xl">
                 <Wallet className="w-5 h-5 text-white" />
               </div>
             </div>

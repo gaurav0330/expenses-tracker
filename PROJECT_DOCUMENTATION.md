@@ -66,11 +66,13 @@ d:\MAIN CODING\live\expense-tracker\
 ---
 
 ### 2. 📊 Financial Analytics (`AnalyticsTab.jsx`)
-- **Core Purpose**: Visualizing income/expense ratios, top expense categories, and monthly savings trends.
-- **Key Business Logic**:
+- **Core Purpose**: Interactive visualization of cash flow, category distribution, savings rates, and expense ratios.
+- **Key Features & Business Logic**:
   - **Savings Rate (%)** = `Max(0, ((Net Savings / Total Income) × 100))`
   - **Expense Ratio (%)** = `Min(100, ((Total Expense / Total Income) × 100))`
-  - Category percentage shares rendered in pie charts and distribution progress bars.
+  - **Interactive Donut Chart**: Active shape slice hover effect (`renderActiveShape`) displaying category name, ₹ amount, and % share right inside the donut center.
+  - **Gradient Cashflow Bar Chart**: Linear gradient fills (`#incomeGrad` & `#expenseGrad`) with rounded bars and glassmorphic tooltips.
+  - **Color-Coded Distribution Table**: Category breakdown with glowing progress indicators and interactive row selection.
 
 ---
 
@@ -111,13 +113,11 @@ d:\MAIN CODING\live\expense-tracker\
     - **Trip Delta** = `Current Odometer - Previous Log Odometer`
     - **Refuel Mileage (km/L)** = `Trip Delta / Liters Filled`
     - **Reserve-to-Reserve Mileage (km/L)** = `Trip Delta / Total Liters Filled between consecutive reserve milestones`
-  - **Payer Category Analytics ("Paid by Me" vs. "Paid by Friend")**:
-    - **Paid by Me (`isPaidByMe: true`)**: Deducted from main account transactions.
-    - **Paid by Friend (`isPaidByMe: false`)**: Tracked for bike performance, but ignored in cash deduction.
-    - **Analytics Cards**:
-      - `Filled by Me`: Total ₹ spent from account & Total Liters filled (% share).
-      - `Filled by Friend`: Total ₹ paid by friend & Total Liters filled (% share).
-      - `Total Monthly Bike Demand`: Combined ₹ & Liters needed by bike.
+  - **Payer Category Analytics & Split Cards ("Paid by Me" vs. "Paid by Friend")**:
+    - **Paid by Me (`isPaidByMe: true`)**: Deducted from main account transactions. Displays Total ₹ spent, Total Liters, refuel count, and % share.
+    - **Paid by Friend (`isPaidByMe: false`)**: Tracked for bike performance, but ignored in cash deduction. Displays Total ₹ paid by friends, Total Liters, refuel count, and % share.
+    - **Total Monthly Bike Demand**: Combined ₹ & Liters needed to run the bike for the month.
+    - **Payer Filter Bar**: Interactive filter buttons (`All Logs`, `Paid by Me`, `Paid by Friend`) to isolate refuel history records.
 
 ---
 
@@ -146,8 +146,8 @@ d:\MAIN CODING\live\expense-tracker\
 ## 🎨 Design System & UX Standards
 
 1. **Base Typography Scaling**: Set `html { font-size: 14.5px; }` in `index.css` to ensure standard, high-density dashboard font proportions.
-2. **High-Contrast Vertical Scrollbars**: All data containers enforce `max-h-[460px] overflow-y-auto custom-scrollbar` with visible 7px slate thumb styling.
-3. **Pop-Up Action Modals**: Forms open inside clean glassmorphic overlay modals (`bg-[#111827]` with backdrop blur), allocating 100% of main screen width to history logs and analytics charts.
+2. **Ultra-Thin 1px Scrollbars**: All scrollable data containers enforce `max-h-[460px] overflow-y-auto custom-scrollbar` with an ultra-thin 1px scrollbar width (`width: 1px`, `height: 1px`).
+3. **Pop-Up Action Modals**: Forms open inside clean solid dark overlay modals (`bg-[#111827]`), allocating 100% of main screen width to history logs and analytics charts.
 
 ---
 

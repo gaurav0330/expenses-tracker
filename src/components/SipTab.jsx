@@ -320,7 +320,7 @@ export default function SipTab({ user }) {
             <p className="text-slate-500 mt-1 max-w-sm">Click "+ New SIP Entry" above to start tracking your mutual fund investments.</p>
           </div>
         ) : (
-          <div className="max-h-[460px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
+          <div className="max-h-[380px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
             {sips.map((sip) => (
               <div key={sip.id} className="group bg-slate-900/60 hover:bg-slate-900 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-800/80 hover:border-slate-700 transition-all gap-4">
                 <div className="flex items-center gap-4">

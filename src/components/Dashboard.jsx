@@ -114,18 +114,18 @@ export default function Dashboard({ user }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-200 selection:bg-emerald-500/30">
+    <div className="min-h-screen text-slate-100 selection:bg-emerald-500/30">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-4 sm:py-8">
         
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 sm:mb-8 gap-4 lg:gap-6">
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 sm:mb-8 gap-4 lg:gap-6 bg-[#111827] p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-2xl">
           <div className="flex items-center justify-between w-full lg:w-auto shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 shrink-0">
                 <LayoutDashboard className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight">ExpenseTracker</h1>
-                <p className="text-slate-400 text-xs sm:text-sm font-medium">Manage your money wisely</p>
+                <h1 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight">ExpenseTracker</h1>
+                <p className="text-slate-400 text-xs sm:text-sm font-medium">Intelligent Money & Asset Management</p>
               </div>
             </div>
             
@@ -133,7 +133,7 @@ export default function Dashboard({ user }) {
             <div className="flex lg:hidden items-center gap-2">
               <button
                 onClick={() => setIsProfileOpen(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/50 transition-all font-bold text-xs shadow-md"
+                className="flex items-center gap-1.5 px-3 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/60 transition-all font-bold text-xs shadow-md"
                 title="View Profile & Financial Summary"
               >
                 <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center font-extrabold text-[10px]">
@@ -146,7 +146,7 @@ export default function Dashboard({ user }) {
 
               <button
                 onClick={handleSignOut}
-                className="p-2 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-xl border border-slate-700/50 transition-all shrink-0"
+                className="p-2 bg-slate-800/80 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-xl border border-slate-700/60 transition-all shrink-0"
                 title="Sign Out"
               >
                 <LogOut className="w-4 h-4" />
@@ -156,46 +156,60 @@ export default function Dashboard({ user }) {
 
           <div className="flex items-center gap-3 w-full lg:w-auto overflow-hidden">
             {/* Tab Navigation */}
-            <div className="flex w-full lg:w-auto bg-slate-800/90 rounded-xl p-1 sm:p-1.5 border border-slate-700/50 shadow-inner overflow-x-auto custom-scrollbar shrink min-w-0">
+            <div className="flex w-full lg:w-auto bg-slate-900/90 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner overflow-x-auto custom-scrollbar shrink min-w-0">
               <button 
                 onClick={() => setActiveTab('overview')}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'overview' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 ${
+                  activeTab === 'overview' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                }`}
               >
                 <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Overview
               </button>
               <button 
                 onClick={() => setActiveTab('analytics')}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'analytics' ? 'bg-purple-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 ${
+                  activeTab === 'analytics' ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                }`}
               >
                 <PieChart className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Analytics
               </button>
               <button 
                 onClick={() => setActiveTab('lending')}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'lending' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 ${
+                  activeTab === 'lending' ? 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                }`}
               >
                 <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Lending
               </button>
               <button 
                 onClick={() => setActiveTab('sips')}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'sips' ? 'bg-cyan-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 ${
+                  activeTab === 'sips' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                }`}
               >
                 <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> SIPs
               </button>
               <button 
                 onClick={() => setActiveTab('pocket')}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'pocket' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 ${
+                  activeTab === 'pocket' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                }`}
               >
                 <NotebookPen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Pocket Notes
               </button>
               <button 
                 onClick={() => setActiveTab('petrol')}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'petrol' ? 'bg-orange-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 ${
+                  activeTab === 'petrol' ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg shadow-orange-500/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                }`}
               >
                 <Fuel className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Fuel & Mileage
               </button>
               <button 
                 onClick={() => setActiveTab('emis')}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 ${activeTab === 'emis' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 ${
+                  activeTab === 'emis' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-600/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                }`}
               >
                 <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> EMI Tracker
               </button>
@@ -205,21 +219,21 @@ export default function Dashboard({ user }) {
             <div className="hidden lg:flex items-center gap-2 shrink-0">
               <button
                 onClick={() => setIsProfileOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/50 hover:border-emerald-500/50 transition-all font-bold text-xs shadow-md whitespace-nowrap"
+                className="flex items-center gap-2.5 px-3.5 py-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-200 rounded-2xl border border-slate-800 hover:border-emerald-500/40 transition-all font-bold text-xs shadow-md whitespace-nowrap"
                 title="View Complete Financial Summary & Profile"
               >
                 <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center font-extrabold text-xs shrink-0">
                   {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <span className="truncate max-w-[100px]">{user?.email?.split('@')[0]}</span>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded-md">
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-2 py-0.5 rounded-md border border-emerald-500/20">
                   Profile
                 </span>
               </button>
 
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-xl border border-slate-700/50 hover:border-rose-500/50 transition-all font-bold text-xs shrink-0 whitespace-nowrap"
+                className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-900/90 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 rounded-2xl border border-slate-800 hover:border-rose-500/40 transition-all font-bold text-xs shrink-0 whitespace-nowrap"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out

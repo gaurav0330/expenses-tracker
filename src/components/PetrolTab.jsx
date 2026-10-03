@@ -13,6 +13,7 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [payerFilter, setPayerFilter] = useState('all'); // 'all', 'me', 'friend'
 
   // Form state
   const [eventType, setEventType] = useState('refuel'); // 'refuel' (Fill Petrol) or 'reserve' (Hit Reserve)
@@ -187,8 +188,10 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
   let totalLiters = 0;
   let paidByMeSpent = 0;
   let paidByMeLiters = 0;
+  let paidByMeCount = 0;
   let paidByFriendSpent = 0;
   let paidByFriendLiters = 0;
+  let paidByFriendCount = 0;
   let minOdo = Infinity;
   let maxOdo = -Infinity;
 
@@ -202,9 +205,11 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
       if (log.isPaidByMe !== false) {
         paidByMeSpent += amt;
         paidByMeLiters += ltrs;
+        paidByMeCount += 1;
       } else {
         paidByFriendSpent += amt;
         paidByFriendLiters += ltrs;
+        paidByFriendCount += 1;
       }
     }
     if (log.odometer) {
@@ -215,11 +220,6 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
 
   const paidByMePct = totalSpent > 0 ? ((paidByMeSpent / totalSpent) * 100).toFixed(1) : '0.0';
   const paidByFriendPct = totalSpent > 0 ? ((paidByFriendSpent / totalSpent) * 100).toFixed(1) : '0.0';
-
-  const payerPieData = [
-    { name: 'Filled by Me', value: paidByMeSpent, liters: paidByMeLiters, color: '#10b981' },
-    { name: 'Filled by Friend', value: paidByFriendSpent, liters: paidByFriendLiters, color: '#3b82f6' }
-  ].filter(d => d.value > 0 || d.liters > 0);
 
   const totalDistance = (minOdo !== Infinity && maxOdo !== -Infinity && maxOdo > minOdo) ? (maxOdo - minOdo) : 0;
   const avgMileage = (totalLiters > 0 && totalDistance > 0) ? (totalDistance / totalLiters).toFixed(1) : '0.0';
@@ -254,8 +254,13 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
     };
   });
 
-  // Display logs newest first for UI list
+  // Display logs newest first for UI list with filter support
   const displayLogs = [...processedLogs].reverse();
+  const filteredDisplayLogs = displayLogs.filter(log => {
+    if (payerFilter === 'me') return log.type === 'refuel' && log.isPaidByMe !== false;
+    if (payerFilter === 'friend') return log.type === 'refuel' && log.isPaidByMe === false;
+    return true;
+  });
 
   // Recharts Chart Data (chronological)
   const chartData = processedLogs
@@ -344,21 +349,109 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
           </button>
         </div>
 
+        {/* Fuel Payment Split Section */}
+        <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-400" />
+                Refuel Split: Paid by Me vs Paid by Friend
+              </h3>
+              <p className="text-xs text-slate-400 mt-1 font-medium">
+                Split overview between account-deducted refills and friend-paid refills
+              </p>
+            </div>
+
+            {/* Filter buttons */}
+            <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold shrink-0">
+              <button
+                onClick={() => setPayerFilter('all')}
+                className={`px-3 py-1.5 rounded-lg transition-colors ${payerFilter === 'all' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+              >
+                All Logs ({logs.length})
+              </button>
+              <button
+                onClick={() => setPayerFilter('me')}
+                className={`px-3 py-1.5 rounded-lg transition-colors ${payerFilter === 'me' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+              >
+                Paid by Me ({paidByMeCount})
+              </button>
+              <button
+                onClick={() => setPayerFilter('friend')}
+                className={`px-3 py-1.5 rounded-lg transition-colors ${payerFilter === 'friend' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+              >
+                Paid by Friend ({paidByFriendCount})
+              </button>
+            </div>
+          </div>
+
+          {/* Split Metric Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+            {/* Paid by Me */}
+            <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4" /> Paid by Me (Deducted)
+                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+                  {paidByMePct}%
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-2">
+                <span className="text-xl font-extrabold text-white font-amount">{formatINR(paidByMeSpent)}</span>
+                <span className="text-xs font-semibold text-emerald-300 font-amount">{paidByMeLiters.toFixed(1)} L ({paidByMeCount} refills)</span>
+              </div>
+            </div>
+
+            {/* Paid by Friend */}
+            <div className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/20 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Users className="w-4 h-4" /> Paid by Friend (No Impact)
+                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                  {paidByFriendPct}%
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-2">
+                <span className="text-xl font-extrabold text-white font-amount">{formatINR(paidByFriendSpent)}</span>
+                <span className="text-xs font-semibold text-purple-300 font-amount">{paidByFriendLiters.toFixed(1)} L ({paidByFriendCount} refills)</span>
+              </div>
+            </div>
+
+            {/* Total Combined */}
+            <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Flame className="w-4 h-4" /> Total Monthly Fuel Needed
+                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">
+                  Combined
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-2">
+                <span className="text-xl font-extrabold text-amber-400 font-amount">{formatINR(totalSpent)}</span>
+                <span className="text-xs font-semibold text-amber-300 font-amount">{totalLiters.toFixed(1)} L</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="py-20 flex justify-center items-center">
             <div className="w-10 h-10 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
           </div>
-        ) : displayLogs.length === 0 ? (
+        ) : filteredDisplayLogs.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center text-center">
             <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
               <Gauge className="w-8 h-8 text-slate-600" />
             </div>
-            <h3 className="text-lg font-medium text-slate-300">No petrol logs found</h3>
-            <p className="text-slate-500 mt-1 max-w-sm">Click "+ Log Petrol / Reserve" above to start tracking your bike mileage!</p>
+            <h3 className="text-lg font-medium text-slate-300">No matching petrol logs found</h3>
+            <p className="text-slate-500 mt-1 max-w-sm">Adjust your filter or click "+ Log Petrol / Reserve" above to record a refill!</p>
           </div>
         ) : (
-          <div className="max-h-[460px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
-            {displayLogs.map((log) => (
+          <div className="max-h-[380px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
+            {filteredDisplayLogs.map((log) => (
               <div key={log.id} className="group bg-slate-900/60 hover:bg-slate-900 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-800/80 hover:border-slate-700 transition-all gap-4">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center border shrink-0 ${

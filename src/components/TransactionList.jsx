@@ -107,7 +107,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
   };
 
   return (
-    <div className="bg-[#111827] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 overflow-hidden flex flex-col h-[580px] max-h-[80vh]">
+    <div className="bg-[#111827] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 overflow-hidden flex flex-col h-[460px] max-h-[70vh]">
       {/* Card Header */}
       <div className="flex flex-wrap items-center justify-between mb-4 gap-3">
         <h2 className="text-xl font-bold text-slate-100">Recent Transactions</h2>
@@ -156,7 +156,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+      <div className="flex-1 max-h-[360px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
         {filteredTransactions.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 py-12">
             <Search className="w-8 h-8 text-slate-600 mb-2" />
