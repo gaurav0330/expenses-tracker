@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { addMonths, subMonths, format, isSameMonth } from 'date-fns';
-import { ChevronLeft, ChevronRight, LayoutDashboard, LogOut, Wallet, Users, TrendingUp, PieChart, NotebookPen, Calendar, User, Fuel, CreditCard } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutDashboard, LogOut, Wallet, Users, TrendingUp, PieChart, NotebookPen, Calendar, Fuel, CreditCard } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import toast from 'react-hot-toast';
@@ -15,6 +15,8 @@ import PocketNotesTab from './PocketNotesTab';
 import PetrolTab from './PetrolTab';
 import EmiTab from './EmiTab';
 import ProfileModal from './ProfileModal';
+import { NotificationBell, UrgentDuesBanner } from './UpcomingDuesNotification';
+import { useUpcomingDues } from '../hooks/useUpcomingDues';
 
 import { addTransaction, getTransactionsForMonth, deleteTransaction, getUserCategories, addUserCategory, getBudgetGoal, setBudgetGoal } from '../lib/expenseService';
 
@@ -31,7 +33,9 @@ export default function Dashboard({ user }) {
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchTransactionsAndCategories = async (date) => {
+  const { upcomingDues, urgentDues, totalUrgentAmount } = useUpcomingDues(user);
+
+  const fetchTransactionsAndCategories = useCallback(async (date) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -50,11 +54,11 @@ export default function Dashboard({ user }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user.uid]);
 
   useEffect(() => {
     fetchTransactionsAndCategories(currentDate);
-  }, [currentDate, user.uid]);
+  }, [currentDate, fetchTransactionsAndCategories]);
 
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
@@ -131,6 +135,13 @@ export default function Dashboard({ user }) {
             
             {/* Mobile / Tablet Controls */}
             <div className="flex lg:hidden items-center gap-2">
+              <NotificationBell 
+                upcomingDues={upcomingDues} 
+                urgentDues={urgentDues} 
+                totalUrgentAmount={totalUrgentAmount} 
+                onNavigateTab={setActiveTab} 
+              />
+
               <button
                 onClick={() => setIsProfileOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/60 transition-all font-bold text-xs shadow-md"
@@ -215,8 +226,15 @@ export default function Dashboard({ user }) {
               </button>
             </div>
 
-            {/* Desktop User Profile & Sign Out Buttons */}
+            {/* Desktop User Profile, Reminders & Sign Out Buttons */}
             <div className="hidden lg:flex items-center gap-2 shrink-0">
+              <NotificationBell 
+                upcomingDues={upcomingDues} 
+                urgentDues={urgentDues} 
+                totalUrgentAmount={totalUrgentAmount} 
+                onNavigateTab={setActiveTab} 
+              />
+
               <button
                 onClick={() => setIsProfileOpen(true)}
                 className="flex items-center gap-2.5 px-3.5 py-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-200 rounded-2xl border border-slate-800 hover:border-emerald-500/40 transition-all font-bold text-xs shadow-md whitespace-nowrap"
@@ -242,6 +260,13 @@ export default function Dashboard({ user }) {
           </div>
         </header>
 
+        {/* Urgent Dues Bank Balance Alert Banner */}
+        <UrgentDuesBanner 
+          urgentDues={urgentDues} 
+          totalAmount={totalUrgentAmount} 
+          onNavigate={setActiveTab} 
+        />
+
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-8 text-red-400 font-medium">
             {error}
@@ -258,27 +283,27 @@ export default function Dashboard({ user }) {
                 {!isSameMonth(currentDate, new Date()) && (
                   <button
                     onClick={handleJumpToCurrentMonth}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-xl border border-emerald-500/30 transition-all shadow-sm"
                     title="Jump to Current Month"
                   >
                     <Calendar className="w-3.5 h-3.5" /> Today
                   </button>
                 )}
-                <div className="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700/50 shadow-inner">
+                <div className="flex items-center bg-slate-900/90 rounded-2xl p-1 border border-slate-800 shadow-inner">
                   <button 
                     onClick={handlePrevMonth}
-                    className="p-2 hover:bg-slate-700 rounded-md transition-colors text-slate-400 hover:text-white"
+                    className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-white"
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="w-32 text-center font-semibold text-slate-200">
+                  <span className="w-32 text-center font-semibold text-xs sm:text-sm text-slate-200">
                     {format(currentDate, 'MMMM yyyy')}
                   </span>
                   <button 
                     onClick={handleNextMonth}
-                    className="p-2 hover:bg-slate-700 rounded-md transition-colors text-slate-400 hover:text-white"
+                    className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-white"
                   >
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -305,6 +330,7 @@ export default function Dashboard({ user }) {
                       isLoading={isAdding} 
                       customCategories={customCategories}
                       onAddCustomCategory={handleAddCustomCategory}
+                      currentDate={currentDate}
                     />
                   </div>
                   <div className="lg:col-span-2">
@@ -322,7 +348,7 @@ export default function Dashboard({ user }) {
           </>
         )}
 
-        {activeTab === 'analytics' && <AnalyticsTab transactions={transactions} />}
+        {activeTab === 'analytics' && <AnalyticsTab transactions={transactions} currentDate={currentDate} />}
         {activeTab === 'lending' && <LendingTab user={user} />}
         {activeTab === 'sips' && <SipTab user={user} />}
         {activeTab === 'pocket' && <PocketNotesTab user={user} />}

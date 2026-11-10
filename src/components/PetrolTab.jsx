@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Fuel, Gauge, PlusCircle, Calendar, Trash2, Pencil, Activity, Check, X, Flame, Navigation, ArrowUpRight, Users, UserCheck, Coins } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState, useEffect, useCallback } from 'react';
+import { Fuel, Gauge, PlusCircle, Calendar, Trash2, Pencil, Activity, Check, X, Flame, Navigation, ArrowUpRight, Users, UserCheck } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { addPetrolLog, getPetrolLogs, deletePetrolLog, updatePetrolLog } from '../lib/expenseService';
 import toast from 'react-hot-toast';
 import { formatINR } from '../lib/utils';
@@ -37,7 +37,7 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
   const [editIsPaidByMe, setEditIsPaidByMe] = useState(true);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await getPetrolLogs(user.uid);
@@ -48,11 +48,11 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user.uid]);
 
   useEffect(() => {
     fetchLogs();
-  }, [user.uid]);
+  }, [fetchLogs]);
 
   // Handle auto-calculating liters when amount or price/liter changes
   const handleAmountChange = (val) => {
@@ -450,7 +450,7 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
             <p className="text-slate-500 mt-1 max-w-sm">Adjust your filter or click "+ Log Petrol / Reserve" above to record a refill!</p>
           </div>
         ) : (
-          <div className="max-h-[380px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
+          <div className="min-h-[460px] max-h-[640px] flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
             {filteredDisplayLogs.map((log) => (
               <div key={log.id} className="group bg-slate-900/60 hover:bg-slate-900 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-800/80 hover:border-slate-700 transition-all gap-4">
                 <div className="flex items-center gap-4">
@@ -794,26 +794,35 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
                     />
                   </div>
 
-                  {/* Deduct from account balance option card */}
-                  <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-2">
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isPaidByMe}
-                        onChange={(e) => setIsPaidByMe(e.target.checked)}
-                        className="w-4 h-4 mt-0.5 accent-amber-500 rounded shrink-0"
-                      />
-                      <div>
-                        <span className="text-xs font-bold text-slate-200 block">
-                          Deduct from my Account Balance? (Paid by me)
+                  {/* Full Tank & Deduct options */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800">
+                      <label className="flex items-center gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isFullTank}
+                          onChange={(e) => setIsFullTank(e.target.checked)}
+                          className="w-4 h-4 accent-amber-500 rounded shrink-0 cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-slate-200">
+                          Full Tank Fill
                         </span>
-                        <span className="text-[11px] text-slate-400 block mt-0.5 leading-snug">
-                          {isPaidByMe 
-                            ? '✓ Will add an expense under Transportation to deduct money from Overview balance.' 
-                            : '⚡ Someone else / Friend paid. Will track fuel & mileage without deducting money from your balance.'}
+                      </label>
+                    </div>
+
+                    <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800">
+                      <label className="flex items-center gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isPaidByMe}
+                          onChange={(e) => setIsPaidByMe(e.target.checked)}
+                          className="w-4 h-4 accent-amber-500 rounded shrink-0 cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-slate-200">
+                          Paid by Me (Deduct)
                         </span>
-                      </div>
-                    </label>
+                      </label>
+                    </div>
                   </div>
                 </>
               )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, ShoppingBag, Coffee, Car, Film, Home, Dumbbell, Plane, MoreHorizontal, ArrowUpRight, ArrowDownRight, Search, Download, Filter } from 'lucide-react';
+import { Trash2, ShoppingBag, Coffee, Car, Film, Home, Dumbbell, Plane, MoreHorizontal, ArrowUpRight, Search, Download } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { formatINR } from '../lib/utils';
 import toast from 'react-hot-toast';
@@ -24,7 +24,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
 
   if (isLoading) {
     return (
-      <div className="bg-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-700/50 h-[580px] max-h-[80vh] flex items-center justify-center">
+      <div className="bg-[#111827] rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-800/80 min-h-[560px] max-h-[700px] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
       </div>
     );
@@ -32,7 +32,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
 
   if (transactions.length === 0) {
     return (
-      <div className="bg-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-700/50 h-[580px] max-h-[80vh] flex flex-col items-center justify-center text-center">
+      <div className="bg-[#111827] rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-800/80 min-h-[560px] max-h-[700px] flex flex-col items-center justify-center text-center">
         <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
           <ShoppingBag className="w-8 h-8 text-slate-600" />
         </div>
@@ -99,7 +99,10 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `Transactions_${format(new Date(), 'yyyy_MM_dd')}.csv`);
+    const monthLabel = transactionsWithBalance[0]?.date 
+      ? format(parseISO(transactionsWithBalance[0].date), 'MMMM_yyyy') 
+      : format(new Date(), 'yyyy_MM');
+    link.setAttribute('download', `Transactions_${monthLabel}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -107,13 +110,13 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
   };
 
   return (
-    <div className="bg-[#111827] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 overflow-hidden flex flex-col h-[460px] max-h-[70vh]">
+    <div className="bg-[#111827] rounded-3xl p-5 sm:p-7 shadow-2xl border border-slate-800/80 overflow-hidden flex flex-col min-h-[560px] max-h-[700px]">
       {/* Card Header */}
       <div className="flex flex-wrap items-center justify-between mb-4 gap-3">
         <h2 className="text-xl font-bold text-slate-100">Recent Transactions</h2>
         <div className="flex items-center gap-2">
           {currentBalance !== undefined && (
-            <div className="bg-slate-900/90 px-3.5 py-1.5 rounded-xl border border-slate-700/60 flex items-center gap-2">
+            <div className="bg-slate-900/90 px-3.5 py-1.5 rounded-xl border border-slate-700/60 flex items-center gap-2 shadow-inner">
               <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Current Balance:</span>
               <span className={`text-sm font-bold font-amount ${currentBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {formatINR(currentBalance)}
@@ -139,14 +142,14 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search description, category..."
-            className="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-inner"
           />
         </div>
         <div>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+            className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-inner"
           >
             <option value="ALL">All Categories</option>
             {uniqueCategories.map(cat => (
@@ -156,9 +159,9 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
         </div>
       </div>
 
-      <div className="flex-1 max-h-[360px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
         {filteredTransactions.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 py-12">
+          <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 py-16">
             <Search className="w-8 h-8 text-slate-600 mb-2" />
             <p className="text-sm font-medium text-slate-400">No matching transactions</p>
             <p className="text-xs text-slate-500 mt-1">Try adjusting your search query or category filter.</p>
@@ -169,10 +172,10 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
           return (
             <div 
               key={t.id} 
-              className="group bg-slate-900/50 hover:bg-slate-900 rounded-xl p-4 flex items-center justify-between border border-transparent hover:border-slate-700 transition-all"
+              className="group bg-slate-900/60 hover:bg-slate-900 rounded-xl p-4 flex items-center justify-between border border-slate-800/60 hover:border-slate-700 transition-all"
             >
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 ${isIncome ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <div className={`w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 shrink-0 ${isIncome ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {isIncome ? <ArrowUpRight className="w-5 h-5" /> : <CategoryIcon category={t.category} className="w-5 h-5" />}
                 </div>
                 <div>
@@ -180,7 +183,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
                     {t.description || (isIncome ? 'Income' : 'Expense')}
                   </h4>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs font-medium text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">
+                    <span className="text-xs font-medium text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700/40">
                       {t.category}
                     </span>
                     <span className="text-xs text-slate-500">
@@ -190,7 +193,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
                 </div>
               </div>
               
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <div className="flex flex-col items-end">
                   <span className={`font-bold text-base sm:text-lg font-amount ${isIncome ? 'text-emerald-400' : 'text-slate-200'}`}>
                     {isIncome ? '+' : '-'}{formatINR(t.amount)}
@@ -204,7 +207,7 @@ export default function TransactionList({ transactions, onDeleteTransaction, isL
                 </div>
                 <button
                   onClick={() => onDeleteTransaction(t.id)}
-                  className="opacity-0 group-hover:opacity-100 p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                  className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
                   title="Delete transaction"
                 >
                   <Trash2 className="w-4 h-4" />

@@ -13,7 +13,12 @@
   }
 
   body {
-    @apply bg-[#0B0F19] text-slate-100 antialiased selection:bg-emerald-500/30 font-sans min-h-screen;
+    @apply bg-[#0B0F19] text-slate-100 antialiased selection:bg-emerald-500/30 font-sans min-h-screen relative;
+    background-image: 
+      radial-gradient(at 10% 10%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+      radial-gradient(at 90% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.04) 0px, transparent 50%);
+    background-attachment: fixed;
   }
 
   /* Hide number input spin buttons */
@@ -34,22 +39,24 @@
     letter-spacing: -0.025em;
   }
 
-  /* Solid Card Panel styling (No glassmorphism blur) */
+  /* Solid Card Panel styling */
   .solid-card {
     background: #111827;
-    border: 1px solid #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
   }
 
-  /* Ultra-Thin 1px Scrollbar across Overall Application */
+  /* Sleek modern 4px Scrollbar across Overall Application */
   ::-webkit-scrollbar {
-    width: 1px;
-    height: 1px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb {
-    background: #475569;
+    background: #334155;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
@@ -57,14 +64,14 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 1px;
-    height: 1px;
+    width: 4px;
+    height: 4px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #475569;
+    background: #334155;
     border-radius: 9999px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -72,7 +79,7 @@
   }
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #475569 transparent;
+    scrollbar-color: #334155 transparent;
   }
 
   /* Keyframe animations */

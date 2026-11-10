@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format, isSameMonth } from 'date-fns';
-import { TrendingDown, TrendingUp, Wallet, Coins, Target, Edit3, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { TrendingDown, TrendingUp, Wallet, Coins, Target, Edit3, AlertTriangle } from 'lucide-react';
 import { formatINR } from '../lib/utils';
 
 export default function MonthlySummary({ transactions, currentDate, previousBalance = 0, budgetGoal = 0, onSaveBudgetGoal }) {
@@ -35,8 +35,9 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
 
   const handleBudgetSubmit = (e) => {
     e.preventDefault();
+    const val = Math.max(0, parseFloat(newBudget) || 0);
     if (onSaveBudgetGoal) {
-      onSaveBudgetGoal(parseFloat(newBudget) || 0);
+      onSaveBudgetGoal(val);
     }
     setIsEditingBudget(false);
   };

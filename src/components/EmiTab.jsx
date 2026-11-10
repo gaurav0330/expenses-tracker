@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { 
   CreditCard, PlusCircle, Trash2, Pencil, X, Calendar, 
-  CheckCircle2, Clock, AlertCircle, ShoppingBag, Landmark, ArrowRight, Check
+  CheckCircle2, AlertCircle, ShoppingBag, Landmark, Check, Clock
 } from 'lucide-react';
 import { addEmi, getEmis, updateEmi, deleteEmi, payEmiInstallment, addTransaction } from '../lib/expenseService';
 import toast from 'react-hot-toast';
 import { formatINR } from '../lib/utils';
 
-export default function EmiTab({ user, currentDate, onTransactionAdded }) {
+export default function EmiTab({ user, onTransactionAdded }) {
   const [emis, setEmis] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('active'); // 'active', 'completed', 'all'
@@ -18,6 +18,11 @@ export default function EmiTab({ user, currentDate, onTransactionAdded }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEmi, setEditingEmi] = useState(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [payingItem, setPayingItem] = useState(null);
+  const [logToOverview, setLogToOverview] = useState(true);
+  const [payCategory, setPayCategory] = useState('Shopping');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Add Form state
   const [itemName, setItemName] = useState('');
@@ -41,7 +46,7 @@ export default function EmiTab({ user, currentDate, onTransactionAdded }) {
   const [editSourceCard, setEditSourceCard] = useState('');
   const [editStartDate, setEditStartDate] = useState('');
 
-  const fetchEmis = async () => {
+  const fetchEmis = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await getEmis(user.uid);
@@ -52,11 +57,11 @@ export default function EmiTab({ user, currentDate, onTransactionAdded }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user.uid]);
 
   useEffect(() => {
     fetchEmis();
-  }, [user.uid]);
+  }, [fetchEmis]);
 
   const resetAddForm = () => {
     setItemName('');
@@ -166,19 +171,24 @@ export default function EmiTab({ user, currentDate, onTransactionAdded }) {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this EMI purchase record?')) return;
+  const handleDelete = (id) => {
+    setDeletingId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingId) return;
     try {
-      await deleteEmi(id);
-      setEmis(prev => prev.filter(item => item.id !== id));
+      await deleteEmi(deletingId);
+      setEmis(prev => prev.filter(item => item.id !== deletingId));
       toast.success('EMI record deleted');
+      setDeletingId(null);
     } catch (error) {
       console.error(error);
       toast.error('Failed to delete EMI');
     }
   };
 
-  const handlePayInstallment = async (item) => {
+  const handlePayInstallment = (item) => {
     const currentPaid = item.paidInstallments || 0;
     const totalTenure = item.totalTenure || 1;
 
@@ -186,28 +196,38 @@ export default function EmiTab({ user, currentDate, onTransactionAdded }) {
       toast.success('This EMI is already fully completed!');
       return;
     }
+    setPayingItem(item);
+  };
 
+  const confirmPayInstallment = async () => {
+    if (!payingItem) return;
+    const currentPaid = payingItem.paidInstallments || 0;
+    const totalTenure = payingItem.totalTenure || 1;
+
+    setIsProcessingPayment(true);
     try {
-      await payEmiInstallment(item.id, currentPaid, totalTenure);
-      toast.success(`Marked 1 installment paid for ${item.itemName}!`);
+      await payEmiInstallment(payingItem.id, currentPaid, totalTenure);
+      toast.success(`Marked 1 installment paid for ${payingItem.itemName}!`);
 
-      // Optionally record as a transaction in Overview tab
-      if (window.confirm(`Would you like to log ₹${item.monthlyEmi} as an expense in your main Overview tab for this month?`)) {
+      if (logToOverview) {
         await addTransaction(user.uid, {
           type: 'expense',
-          category: 'Shopping',
-          description: `EMI Payment: ${item.itemName} (${currentPaid + 1}/${totalTenure})`,
-          amount: item.monthlyEmi,
+          category: payCategory,
+          description: `EMI Payment: ${payingItem.itemName} (${currentPaid + 1}/${totalTenure})`,
+          amount: payingItem.monthlyEmi,
           date: format(new Date(), 'yyyy-MM-dd')
         });
         toast.success('Logged EMI payment into main transactions!');
         if (onTransactionAdded) onTransactionAdded();
       }
 
+      setPayingItem(null);
       await fetchEmis();
     } catch (error) {
       console.error(error);
       toast.error('Failed to record installment payment');
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -345,7 +365,7 @@ export default function EmiTab({ user, currentDate, onTransactionAdded }) {
             <p className="text-slate-500 mt-1 max-w-sm">Click "+ New EMI Purchase" above to track gadgets or items bought on monthly installment plans.</p>
           </div>
         ) : (
-          <div className="max-h-[380px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
+          <div className="min-h-[460px] max-h-[640px] flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
             {displayEmis.map((item) => {
               const paidCount = item.paidInstallments || 0;
               const totalTenure = item.totalTenure || 1;
@@ -472,7 +492,123 @@ export default function EmiTab({ user, currentDate, onTransactionAdded }) {
         )}
       </div>
 
-      {/* --- ADD EMI MODAL --- */}
+      {/* --- PAY INSTALLMENT CONFIRM MODAL --- */}
+      {payingItem && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                Pay Monthly Installment
+              </h3>
+              <button 
+                onClick={() => setPayingItem(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Item:</span>
+                <span className="font-bold text-white">{payingItem.itemName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Installment:</span>
+                <span className="font-bold text-purple-300 font-amount">
+                  {(payingItem.paidInstallments || 0) + 1} of {payingItem.totalTenure}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Amount Due:</span>
+                <span className="font-extrabold text-emerald-400 text-base font-amount">
+                  {formatINR(payingItem.monthlyEmi)}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="flex items-start gap-2.5 cursor-pointer bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <input
+                  type="checkbox"
+                  checked={logToOverview}
+                  onChange={(e) => setLogToOverview(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 accent-emerald-500 rounded shrink-0 cursor-pointer"
+                />
+                <span className="text-xs text-slate-300 font-medium">
+                  Log this payment as an expense in your <strong className="text-emerald-400">Overview</strong> tab for this month
+                </span>
+              </label>
+
+              {logToOverview && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Expense Category</label>
+                  <select
+                    value={payCategory}
+                    onChange={(e) => setPayCategory(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  >
+                    <option value="Shopping">Shopping</option>
+                    <option value="Bills & Utilities">Bills & Utilities</option>
+                    <option value="Transportation">Transportation</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setPayingItem(null)}
+                className="w-1/2 px-4 py-3 rounded-xl border border-slate-700 text-slate-300 font-semibold text-sm hover:bg-slate-800 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isProcessingPayment}
+                onClick={confirmPayInstallment}
+                className="w-1/2 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-xl shadow-emerald-600/20 transition-all active:scale-98 disabled:opacity-50"
+              >
+                {isProcessingPayment ? 'Processing...' : 'Confirm Pay'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- DELETE CONFIRM MODAL --- */}
+      {deletingId && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative space-y-5 text-center">
+            <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto border border-rose-500/20">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">Delete EMI Purchase?</h3>
+              <p className="text-xs text-slate-400 mt-1">This will permanently remove the record from your EMI tracker.</p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingId(null)}
+                className="w-1/2 px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 font-semibold text-xs hover:bg-slate-800 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="w-1/2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-xl shadow-rose-600/20 transition-all active:scale-98"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
           <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">

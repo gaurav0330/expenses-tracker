@@ -1,4 +1,4 @@
-import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy, setDoc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, deleteDoc, doc, setDoc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from "./firebase";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 
@@ -294,9 +294,22 @@ export const deletePocketEntry = async (id) => {
 
 export const getAllTimeSummary = async (userId) => {
   try {
-    // 1. Transactions
     const txQ = query(collection(db, TRANSACTIONS_COLLECTION), where("userId", "==", userId));
-    const txSnap = await getDocs(txQ);
+    const lendQ = query(collection(db, LENDING_COLLECTION), where("userId", "==", userId));
+    const sipQ = query(collection(db, SIPS_COLLECTION), where("userId", "==", userId));
+    const pQ = query(collection(db, POCKET_COLLECTION), where("userId", "==", userId));
+    const emiQ = query(collection(db, EMIS_COLLECTION), where("userId", "==", userId));
+
+    // Parallel fetch all 5 collections simultaneously
+    const [txSnap, lendSnap, sipSnap, pSnap, emiSnap] = await Promise.all([
+      getDocs(txQ),
+      getDocs(lendQ),
+      getDocs(sipQ),
+      getDocs(pQ),
+      getDocs(emiQ)
+    ]);
+
+    // 1. Transactions
     let totalIncome = 0;
     let totalExpense = 0;
     const categoryTotals = {};
@@ -314,8 +327,6 @@ export const getAllTimeSummary = async (userId) => {
     });
 
     // 2. Lends (pending to receive)
-    const lendQ = query(collection(db, LENDING_COLLECTION), where("userId", "==", userId));
-    const lendSnap = await getDocs(lendQ);
     let pendingLend = 0;
     lendSnap.forEach(doc => {
       const d = doc.data();
@@ -325,16 +336,12 @@ export const getAllTimeSummary = async (userId) => {
     });
 
     // 3. SIPs
-    const sipQ = query(collection(db, SIPS_COLLECTION), where("userId", "==", userId));
-    const sipSnap = await getDocs(sipQ);
     let totalSip = 0;
     sipSnap.forEach(doc => {
       totalSip += doc.data().amount || 0;
     });
 
     // 4. Pocket Notes (Side Cash)
-    const pQ = query(collection(db, POCKET_COLLECTION), where("userId", "==", userId));
-    const pSnap = await getDocs(pQ);
     let sideReceived = 0;
     let sideSpent = 0;
     pSnap.forEach(doc => {
@@ -343,9 +350,24 @@ export const getAllTimeSummary = async (userId) => {
       if (d.type === 'spent') sideSpent += d.amount || 0;
     });
 
+    // 5. EMIs (Remaining Liabilities)
+    let remainingEmiLiability = 0;
+    let activeEmisCount = 0;
+    emiSnap.forEach(doc => {
+      const d = doc.data();
+      const paid = d.paidInstallments || 0;
+      const tenure = d.totalTenure || 1;
+      const monthlyEmi = d.monthlyEmi || 0;
+      if (d.status === 'active' && paid < tenure) {
+        remainingEmiLiability += Math.max(0, tenure - paid) * monthlyEmi;
+        activeEmisCount += 1;
+      }
+    });
+
     const netBalance = totalIncome - totalExpense;
     const sideBalance = sideReceived - sideSpent;
-    const netWorth = netBalance + sideBalance + pendingLend;
+    const totalAssets = netBalance + sideBalance + pendingLend;
+    const netWorth = totalAssets - remainingEmiLiability;
 
     return {
       totalIncome,
@@ -354,6 +376,9 @@ export const getAllTimeSummary = async (userId) => {
       pendingLend,
       totalSip,
       sideBalance,
+      totalAssets,
+      remainingEmiLiability,
+      activeEmisCount,
       netWorth,
       categoryTotals,
       totalTxnsCount: txSnap.size

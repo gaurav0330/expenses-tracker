@@ -14,12 +14,12 @@ It is designed to give complete control over monthly budgeting, investment commi
 
 | Layer | Technology Used |
 | :--- | :--- |
-| **Frontend Framework** | React 18 (Vite JS bundler) |
-| **Styling & Design System** | TailwindCSS + Vanilla CSS (`src/index.css`) + Glassmorphic Dark Aesthetics |
-| **Backend & Database** | Firebase Firestore NoSQL Database |
+| **Frontend Framework** | React 19 (Vite JS bundler) |
+| **Styling & Design System** | TailwindCSS + Modern Dark Fintech Aesthetics (`src/index.css`) |
+| **Backend & Database** | Firebase Firestore NoSQL Database with Ownership-Scoped Rules |
 | **Authentication** | Firebase Auth (Google Sign-In & Email/Password) |
 | **Icons & Visuals** | Lucide React Icons & Recharts (Data Visualization) |
-| **Typography & Formatting** | JetBrains Mono (`.font-amount` for financial values) & Inter |
+| **Typography & Formatting** | JetBrains Mono (`.font-amount` for financial values) & Plus Jakarta Sans |
 
 ---
 

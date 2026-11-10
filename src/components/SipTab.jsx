@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, Trash2, PlusCircle, Activity, Calendar, Clock, PieChart as PieIcon, Layers, Wallet, Tag, Pencil, X, Check } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { addSip, getSips, deleteSip, updateSip } from '../lib/expenseService';
@@ -45,7 +45,7 @@ export default function SipTab({ user }) {
   const [editDate, setEditDate] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
-  const fetchSips = async () => {
+  const fetchSips = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await getSips(user.uid);
@@ -55,15 +55,19 @@ export default function SipTab({ user }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user.uid]);
 
   useEffect(() => {
     fetchSips();
-  }, [user.uid]);
+  }, [fetchSips]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!fundName || !amount || !date) return;
+    const numAmount = parseFloat(amount);
+    if (!fundName.trim() || isNaN(numAmount) || numAmount <= 0 || !date) {
+      toast.error('Please enter a valid fund name and amount greater than 0');
+      return;
+    }
     
     setIsAdding(true);
     try {
@@ -72,7 +76,7 @@ export default function SipTab({ user }) {
 
       await addSip(user.uid, {
         fundName: fundName.trim(),
-        amount: parseFloat(amount),
+        amount: numAmount,
         date: date,
         deductionDate: deductionDay
       });
@@ -320,7 +324,7 @@ export default function SipTab({ user }) {
             <p className="text-slate-500 mt-1 max-w-sm">Click "+ New SIP Entry" above to start tracking your mutual fund investments.</p>
           </div>
         ) : (
-          <div className="max-h-[380px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
+          <div className="min-h-[460px] max-h-[640px] flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
             {sips.map((sip) => (
               <div key={sip.id} className="group bg-slate-900/60 hover:bg-slate-900 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-800/80 hover:border-slate-700 transition-all gap-4">
                 <div className="flex items-center gap-4">

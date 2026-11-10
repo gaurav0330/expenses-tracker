@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
-import { NotebookPen, PlusCircle, Trash2, ArrowUpRight, ArrowDownRight, StickyNote, Wallet, Landmark } from 'lucide-react';
+import { NotebookPen, Trash2, ArrowUpRight, ArrowDownRight, StickyNote, Landmark } from 'lucide-react';
 import { addPocketEntry, getPocketEntries, deletePocketEntry } from '../lib/expenseService';
 import toast from 'react-hot-toast';
 import { formatINR } from '../lib/utils';
@@ -17,7 +17,7 @@ export default function PocketNotesTab({ user }) {
   const [note, setNote] = useState('');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await getPocketEntries(user.uid);
@@ -28,11 +28,11 @@ export default function PocketNotesTab({ user }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user.uid]);
 
   useEffect(() => {
     fetchEntries();
-  }, [user.uid]);
+  }, [fetchEntries]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -266,9 +266,9 @@ export default function PocketNotesTab({ user }) {
         </div>
 
         {/* List Column */}
-        <div className="lg:col-span-2 bg-[#111827] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 flex flex-col h-[580px] max-h-[80vh] overflow-hidden">
+        <div className="lg:col-span-2 bg-[#111827] rounded-3xl p-5 sm:p-7 shadow-2xl border border-slate-800/80 flex flex-col min-h-[560px] max-h-[720px] overflow-hidden">
           <div className="flex flex-wrap items-center justify-between mb-6 gap-3">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
+            <h2 className="text-xl font-bold flex items-center gap-2 text-slate-100">
               <StickyNote className="w-5 h-5 text-amber-400" />
               Side Vault & Notes Log
             </h2>
@@ -309,7 +309,7 @@ export default function PocketNotesTab({ user }) {
               <p className="text-slate-500 mt-1 max-w-[250px]">Keep money received from your father or separate notes isolated here!</p>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto max-h-[380px] space-y-4 pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
               {filteredEntries.map((item) => {
                 const isRec = item.type === 'received';
                 const isSpent = item.type === 'spent';
@@ -318,7 +318,7 @@ export default function PocketNotesTab({ user }) {
                 return (
                   <div
                     key={item.id}
-                    className="group bg-slate-900/50 hover:bg-slate-900 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between border border-transparent hover:border-slate-700 transition-all gap-3"
+                    className="group bg-slate-900/60 hover:bg-slate-900 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-800/60 hover:border-slate-700 transition-all gap-3"
                   >
                     <div className="flex items-start gap-4">
                       <div
@@ -350,7 +350,7 @@ export default function PocketNotesTab({ user }) {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-4">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
                       {!isNote && (
                         <span className={`font-bold text-base sm:text-lg font-amount ${isRec ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {isRec ? '+' : '-'}{formatINR(item.amount)}
@@ -358,7 +358,7 @@ export default function PocketNotesTab({ user }) {
                       )}
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="opacity-0 group-hover:opacity-100 p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
                         title="Delete entry"
                       >
                         <Trash2 className="w-4 h-4" />

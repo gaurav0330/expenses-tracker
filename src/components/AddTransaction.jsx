@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { PlusCircle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useEffect, useMemo } from 'react';
+import { PlusCircle } from 'lucide-react';
+import { format, isSameMonth } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const DEFAULT_CATEGORIES = [
@@ -17,8 +17,11 @@ const DEFAULT_CATEGORIES = [
   'Other'
 ];
 
-export default function AddTransaction({ onAddTransaction, isLoading, customCategories = [], onAddCustomCategory }) {
-  const allCategories = [...DEFAULT_CATEGORIES, ...customCategories.filter(c => !DEFAULT_CATEGORIES.includes(c))];
+export default function AddTransaction({ onAddTransaction, isLoading, customCategories = [], onAddCustomCategory, currentDate }) {
+  const allCategories = useMemo(() => [
+    ...DEFAULT_CATEGORIES, 
+    ...customCategories.filter(c => !DEFAULT_CATEGORIES.includes(c))
+  ], [customCategories]);
   
   const [type, setType] = useState('expense'); // 'expense' or 'income'
   const [amount, setAmount] = useState('');
@@ -28,6 +31,18 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
   const [isAddingCustom, setIsAddingCustom] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
+  // Synchronize form date when currentDate changes if not in same month
+  useEffect(() => {
+    if (currentDate) {
+      const today = new Date();
+      if (isSameMonth(currentDate, today)) {
+        setDate(format(today, 'yyyy-MM-dd'));
+      } else {
+        setDate(format(currentDate, 'yyyy-MM-01'));
+      }
+    }
+  }, [currentDate]);
+
   useEffect(() => {
     if (!category && allCategories.length > 0) {
       setCategory(allCategories[0]);
@@ -36,7 +51,15 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!amount || !date) return;
+    const numAmount = parseFloat(amount);
+    if (!amount || isNaN(numAmount) || numAmount <= 0) {
+      toast.error('Please enter a valid amount greater than 0');
+      return;
+    }
+    if (!date) {
+      toast.error('Please select a valid date');
+      return;
+    }
 
     let finalCategory = category;
     
@@ -50,8 +73,8 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
     try {
       await onAddTransaction({
         type,
-        amount: parseFloat(amount),
-        description,
+        amount: numAmount,
+        description: description.trim(),
         category: finalCategory,
         date
       });
@@ -63,7 +86,7 @@ export default function AddTransaction({ onAddTransaction, isLoading, customCate
         setNewCategoryName('');
         setCategory(finalCategory);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to add transaction.');
     }
   };

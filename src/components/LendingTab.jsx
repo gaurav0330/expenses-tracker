@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Users, CheckCircle, Clock, Trash2, PlusCircle, X } from 'lucide-react';
 import { addLend, getLends, updateLendStatus, deleteLend } from '../lib/expenseService';
@@ -16,7 +16,7 @@ export default function LendingTab({ user }) {
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [description, setDescription] = useState('');
 
-  const fetchLends = async () => {
+  const fetchLends = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await getLends(user.uid);
@@ -26,22 +26,26 @@ export default function LendingTab({ user }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user.uid]);
 
   useEffect(() => {
     fetchLends();
-  }, [user.uid]);
+  }, [fetchLends]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!person || !amount || !date) return;
+    const numAmount = parseFloat(amount);
+    if (!person.trim() || isNaN(numAmount) || numAmount <= 0 || !date) {
+      toast.error('Please enter a valid person and amount greater than 0');
+      return;
+    }
     
     setIsAdding(true);
     try {
       await addLend(user.uid, {
-        person,
-        amount: parseFloat(amount),
-        description,
+        person: person.trim(),
+        amount: numAmount,
+        description: description.trim(),
         date
       });
       toast.success('Lending entry added!');
@@ -134,7 +138,7 @@ export default function LendingTab({ user }) {
             <p className="text-slate-500 mt-1 max-w-sm">Click "+ New Lending Entry" above to track money lent to others.</p>
           </div>
         ) : (
-          <div className="max-h-[380px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
+          <div className="min-h-[460px] max-h-[640px] flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
             {lends.map((lend) => (
               <div key={lend.id} className="group bg-slate-900/60 hover:bg-slate-900 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-800/80 hover:border-slate-700 transition-all gap-4">
                 <div className="flex items-start gap-4">
