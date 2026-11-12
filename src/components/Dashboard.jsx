@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { addMonths, subMonths, format, isSameMonth } from 'date-fns';
-import { ChevronLeft, ChevronRight, LayoutDashboard, LogOut, Wallet, Users, TrendingUp, PieChart, NotebookPen, Calendar, Fuel, CreditCard } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutDashboard, LogOut, Wallet, Users, TrendingUp, PieChart, NotebookPen, Calendar, Fuel, CreditCard, Eye, EyeOff } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { usePrivacy } from '../hooks/usePrivacy';
 import toast from 'react-hot-toast';
 
 import MonthlySummary from './MonthlySummary';
@@ -15,10 +16,27 @@ import PocketNotesTab from './PocketNotesTab';
 import PetrolTab from './PetrolTab';
 import EmiTab from './EmiTab';
 import ProfileModal from './ProfileModal';
+import AccountCards from './AccountCards';
+import TransferModal from './TransferModal';
+import ManageAccountsModal from './ManageAccountsModal';
 import { NotificationBell, UrgentDuesBanner } from './UpcomingDuesNotification';
 import { useUpcomingDues } from '../hooks/useUpcomingDues';
 
-import { addTransaction, getTransactionsForMonth, deleteTransaction, getUserCategories, addUserCategory, getBudgetGoal, setBudgetGoal } from '../lib/expenseService';
+import { 
+  addTransaction, 
+  getTransactionsForMonth, 
+  deleteTransaction, 
+  getUserCategories, 
+  addUserCategory, 
+  getBudgetGoal, 
+  setBudgetGoal,
+  getUserAccounts,
+  addBankAccount,
+  updateBankAccount,
+  deleteBankAccount,
+  shiftTransactions,
+  addTransfer
+} from '../lib/expenseService';
 
 export default function Dashboard({ user }) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -27,6 +45,14 @@ export default function Dashboard({ user }) {
   const [budgetGoal, setBudgetGoalState] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   
+  // Bank Accounts & Transfers State
+  const [accounts, setAccounts] = useState([]);
+  const [accountBalances, setAccountBalances] = useState({});
+  const [selectedAccountFilter, setSelectedAccountFilter] = useState('ALL');
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isManageAccountsOpen, setIsManageAccountsOpen] = useState(false);
+  const { isMoneyHidden, toggleGlobalPrivacy } = usePrivacy();
+
   const [transactions, setTransactions] = useState([]);
   const [customCategories, setCustomCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,9 +65,13 @@ export default function Dashboard({ user }) {
     setIsLoading(true);
     setError(null);
     try {
-      const { transactions, previousBalance } = await getTransactionsForMonth(user.uid, date);
+      const userAccounts = await getUserAccounts(user.uid);
+      setAccounts(userAccounts);
+
+      const { transactions, previousBalance, allTimeBalances } = await getTransactionsForMonth(user.uid, date, userAccounts);
       setTransactions(transactions);
       setPreviousBalance(previousBalance);
+      setAccountBalances(allTimeBalances || {});
       
       const categories = await getUserCategories(user.uid);
       setCustomCategories(categories);
@@ -90,9 +120,7 @@ export default function Dashboard({ user }) {
     setIsAdding(true);
     try {
       const newId = await addTransaction(user.uid, transactionData);
-      const { transactions, previousBalance } = await getTransactionsForMonth(user.uid, currentDate);
-      setTransactions(transactions);
-      setPreviousBalance(previousBalance);
+      await fetchTransactionsAndCategories(currentDate);
       return newId;
     } catch (err) {
       console.error(err);
@@ -102,15 +130,81 @@ export default function Dashboard({ user }) {
     }
   };
 
+  const handleAddTransfer = async (transferData) => {
+    setIsAdding(true);
+    try {
+      const newId = await addTransfer(user.uid, transferData);
+      await fetchTransactionsAndCategories(currentDate);
+      return newId;
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to execute transfer.");
+      throw err;
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleAddBankAccount = async (accountData) => {
+    try {
+      const newAcc = await addBankAccount(user.uid, accountData);
+      await fetchTransactionsAndCategories(currentDate);
+      return newAcc;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  const handleUpdateBankAccount = async (accId, updatedFields) => {
+    try {
+      const updated = await updateBankAccount(user.uid, accId, updatedFields);
+      await fetchTransactionsAndCategories(currentDate);
+      return updated;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  const handleDeleteBankAccount = async (accId, targetMigrationId) => {
+    try {
+      const remaining = await deleteBankAccount(user.uid, accId, targetMigrationId);
+      if (selectedAccountFilter === accId) {
+        setSelectedAccountFilter('ALL');
+      }
+      await fetchTransactionsAndCategories(currentDate);
+      return remaining;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  const handleShiftTransactions = async (fromId, toId, options) => {
+    try {
+      const count = await shiftTransactions(user.uid, fromId, toId, options);
+      await fetchTransactionsAndCategories(currentDate);
+      return count;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
   const handleDeleteTransaction = async (id) => {
     try {
       await deleteTransaction(id);
-      setTransactions(transactions.filter(t => t.id !== id));
+      await fetchTransactionsAndCategories(currentDate);
       toast.success('Transaction deleted');
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete transaction.");
     }
+  };
+
+  const handleTogglePrivacy = () => {
+    toggleGlobalPrivacy();
   };
 
   const handleSignOut = () => {
@@ -121,8 +215,8 @@ export default function Dashboard({ user }) {
     <div className="min-h-screen text-slate-100 selection:bg-emerald-500/30">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-4 sm:py-8">
         
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 sm:mb-8 gap-4 lg:gap-6 bg-[#111827] p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-2xl">
-          <div className="flex items-center justify-between w-full lg:w-auto shrink-0">
+        <header className="flex flex-col xl:flex-row xl:items-center justify-between mb-6 sm:mb-8 gap-4 xl:gap-6 bg-[#111827] p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-2xl">
+          <div className="flex items-center justify-between w-full xl:w-auto shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 shrink-0">
                 <LayoutDashboard className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -134,7 +228,19 @@ export default function Dashboard({ user }) {
             </div>
             
             {/* Mobile / Tablet Controls */}
-            <div className="flex lg:hidden items-center gap-2">
+            <div className="flex xl:hidden items-center gap-2">
+              <button
+                onClick={handleTogglePrivacy}
+                className={`p-2 rounded-xl border transition-all ${
+                  isMoneyHidden 
+                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-400' 
+                    : 'bg-slate-800/80 border-slate-700/60 text-slate-300 hover:text-white'
+                }`}
+                title={isMoneyHidden ? "Show balances (Privacy Mode active)" : "Hide balances (Privacy Mode: ****)"}
+              >
+                {isMoneyHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+
               <NotificationBell 
                 upcomingDues={upcomingDues} 
                 urgentDues={urgentDues} 
@@ -165,9 +271,9 @@ export default function Dashboard({ user }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full lg:w-auto overflow-hidden">
+          <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-3 w-full xl:w-auto min-w-0">
             {/* Tab Navigation */}
-            <div className="flex w-full lg:w-auto bg-slate-900/90 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner overflow-x-auto custom-scrollbar shrink min-w-0">
+            <div className="flex w-full xl:w-auto bg-slate-900/90 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner overflow-x-auto custom-scrollbar shrink min-w-0">
               <button 
                 onClick={() => setActiveTab('overview')}
                 className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 ${
@@ -227,7 +333,19 @@ export default function Dashboard({ user }) {
             </div>
 
             {/* Desktop User Profile, Reminders & Sign Out Buttons */}
-            <div className="hidden lg:flex items-center gap-2 shrink-0">
+            <div className="hidden xl:flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleTogglePrivacy}
+                className={`p-2.5 rounded-2xl border transition-all shadow-md flex items-center justify-center ${
+                  isMoneyHidden 
+                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 hover:bg-amber-500/25 ring-1 ring-amber-500/30' 
+                    : 'bg-slate-900/90 border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+                title={isMoneyHidden ? "Show balances (Privacy Mode active)" : "Hide balances (Privacy Mode: ****)"}
+              >
+                {isMoneyHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+
               <NotificationBell 
                 upcomingDues={upcomingDues} 
                 urgentDues={urgentDues} 
@@ -315,22 +433,44 @@ export default function Dashboard({ user }) {
               previousBalance={previousBalance}
               budgetGoal={budgetGoal}
               onSaveBudgetGoal={handleSaveBudgetGoal}
+              accounts={accounts}
+              accountBalances={accountBalances}
+            />
+
+            <AccountCards 
+              accounts={accounts}
+              accountBalances={accountBalances}
+              selectedAccountId={selectedAccountFilter}
+              onSelectAccount={setSelectedAccountFilter}
+              onOpenTransfer={() => setIsTransferModalOpen(true)}
+              onOpenManage={() => setIsManageAccountsOpen(true)}
             />
 
             {(() => {
               const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-              const totalExpense = transactions.filter(t => t.type !== 'income').reduce((sum, t) => sum + t.amount, 0);
-              const currentBalance = previousBalance + totalIncome - totalExpense;
+              const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+              
+              const totalCombinedBalance = accounts.length > 0 
+                ? accounts.reduce((sum, acc) => sum + (accountBalances[acc.id] ?? (Number(acc.openingBalance) || 0)), 0)
+                : (previousBalance + totalIncome - totalExpense);
+
+              const displayedBalance = selectedAccountFilter === 'ALL'
+                ? totalCombinedBalance
+                : (accountBalances[selectedAccountFilter] ?? (Number(accounts.find(a => a.id === selectedAccountFilter)?.openingBalance) || 0));
 
               return (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                   <div className="lg:col-span-1">
                     <AddTransaction 
                       onAddTransaction={handleAddTransaction} 
+                      onAddTransfer={handleAddTransfer}
                       isLoading={isAdding} 
                       customCategories={customCategories}
                       onAddCustomCategory={handleAddCustomCategory}
                       currentDate={currentDate}
+                      accounts={accounts}
+                      accountBalances={accountBalances}
+                      onOpenManageAccounts={() => setIsManageAccountsOpen(true)}
                     />
                   </div>
                   <div className="lg:col-span-2">
@@ -338,8 +478,11 @@ export default function Dashboard({ user }) {
                       transactions={transactions} 
                       onDeleteTransaction={handleDeleteTransaction}
                       isLoading={isLoading}
-                      currentBalance={currentBalance}
+                      currentBalance={displayedBalance}
                       previousBalance={previousBalance}
+                      accounts={accounts}
+                      selectedAccountFilter={selectedAccountFilter}
+                      onSelectAccountFilter={setSelectedAccountFilter}
                     />
                   </div>
                 </div>
@@ -360,6 +503,28 @@ export default function Dashboard({ user }) {
           user={user}
           isOpen={isProfileOpen}
           onClose={() => setIsProfileOpen(false)}
+        />
+
+        {/* Shift / Transfer Funds Modal */}
+        <TransferModal
+          isOpen={isTransferModalOpen}
+          onClose={() => setIsTransferModalOpen(false)}
+          accounts={accounts}
+          accountBalances={accountBalances}
+          onTransfer={handleAddTransfer}
+        />
+
+        {/* Manage Bank Accounts & Batch Shift Modal */}
+        <ManageAccountsModal
+          isOpen={isManageAccountsOpen}
+          onClose={() => setIsManageAccountsOpen(false)}
+          accounts={accounts}
+          accountBalances={accountBalances}
+          categories={customCategories}
+          onAddAccount={handleAddBankAccount}
+          onUpdateAccount={handleUpdateBankAccount}
+          onDeleteAccount={handleDeleteBankAccount}
+          onShiftTransactions={handleShiftTransactions}
         />
 
       </div>

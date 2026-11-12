@@ -1,9 +1,19 @@
 import { useState } from 'react';
 import { format, isSameMonth } from 'date-fns';
 import { TrendingDown, TrendingUp, Wallet, Coins, Target, Edit3, AlertTriangle } from 'lucide-react';
-import { formatINR } from '../lib/utils';
+import { usePrivacy } from '../hooks/usePrivacy';
+import { PrivacyAmount } from '../context/PrivacyContext';
 
-export default function MonthlySummary({ transactions, currentDate, previousBalance = 0, budgetGoal = 0, onSaveBudgetGoal }) {
+export default function MonthlySummary({ 
+  transactions, 
+  currentDate, 
+  previousBalance = 0, 
+  budgetGoal = 0, 
+  onSaveBudgetGoal,
+  accounts = [],
+  accountBalances = {}
+}) {
+  const { isMoneyHidden, toggleRevealKey } = usePrivacy();
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [newBudget, setNewBudget] = useState(budgetGoal || '');
 
@@ -11,10 +21,12 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const expenses = transactions.filter(t => t.type !== 'income');
+  const expenses = transactions.filter(t => t.type === 'expense');
   const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
   
-  const balance = previousBalance + totalIncome - totalExpense;
+  const balance = accounts.length > 0
+    ? accounts.reduce((sum, acc) => sum + (accountBalances[acc.id] ?? (Number(acc.openingBalance) || 0)), 0)
+    : (previousBalance + totalIncome - totalExpense);
 
   const categoryTotals = expenses.reduce((acc, t) => {
     acc[t.category] = (acc[t.category] || 0) + t.amount;
@@ -47,7 +59,13 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
         {/* Total Income Card */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 hover:border-slate-700/80 transition-all">
+        <div 
+          onClick={() => isMoneyHidden && toggleRevealKey('summary_total_income')}
+          className={`bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 hover:border-slate-700/80 transition-all ${
+            isMoneyHidden ? 'cursor-pointer hover:border-emerald-500/40' : ''
+          }`}
+          title={isMoneyHidden ? "Click to peek / reveal Total Income" : undefined}
+        >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-slate-400 text-xs tracking-wider uppercase">
               Total Income
@@ -57,9 +75,11 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
             </div>
           </div>
           <div className="flex flex-col">
-            <span className="text-2xl sm:text-3xl font-extrabold text-slate-100 font-amount">
-              {formatINR(totalIncome)}
-            </span>
+            <PrivacyAmount 
+              amount={totalIncome} 
+              id="summary_total_income" 
+              className="text-2xl sm:text-3xl font-extrabold text-slate-100 font-amount" 
+            />
             <span className="text-slate-400 text-xs mt-2 font-medium">
               in {format(currentDate, 'MMM yyyy')}
             </span>
@@ -67,7 +87,13 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
         </div>
 
         {/* Total Spending Card */}
-        <div className="bg-gradient-to-br from-rose-500 to-rose-700 rounded-2xl p-5 sm:p-6 shadow-xl shadow-rose-900/20 text-white relative overflow-hidden">
+        <div 
+          onClick={() => isMoneyHidden && toggleRevealKey('summary_total_expense')}
+          className={`bg-gradient-to-br from-rose-500 to-rose-700 rounded-2xl p-5 sm:p-6 shadow-xl shadow-rose-900/20 text-white relative overflow-hidden ${
+            isMoneyHidden ? 'cursor-pointer' : ''
+          }`}
+          title={isMoneyHidden ? "Click to peek / reveal Total Spent" : undefined}
+        >
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
@@ -79,9 +105,11 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
               </div>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-extrabold tracking-tight font-amount">
-                {formatINR(totalExpense)}
-              </span>
+              <PrivacyAmount 
+                amount={totalExpense} 
+                id="summary_total_expense" 
+                className="text-2xl sm:text-3xl font-extrabold tracking-tight font-amount" 
+              />
             </div>
             <div className="flex items-center justify-between mt-2">
               <p className="text-rose-100 text-xs font-medium">
@@ -89,7 +117,7 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
               </p>
               {isSameMonth(currentDate, new Date()) && (
                 <span className="text-xs bg-white/20 px-2 py-0.5 rounded-md text-white font-semibold backdrop-blur-sm font-amount">
-                  Today: {formatINR(spentToday)}
+                  Today: <PrivacyAmount amount={spentToday} id="summary_spent_today" className="font-semibold" />
                 </span>
               )}
             </div>
@@ -97,9 +125,15 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
         </div>
 
         {/* Balance Card */}
-        <div className={`bg-gradient-to-br rounded-2xl p-5 sm:p-6 shadow-xl text-white relative overflow-hidden ${
-          balance >= 0 ? 'from-emerald-600 to-teal-800 shadow-emerald-950/30' : 'from-orange-600 to-rose-800 shadow-rose-950/30'
-        }`}>
+        <div 
+          onClick={() => isMoneyHidden && toggleRevealKey('summary_current_balance')}
+          className={`bg-gradient-to-br rounded-2xl p-5 sm:p-6 shadow-xl text-white relative overflow-hidden ${
+            isMoneyHidden ? 'cursor-pointer' : ''
+          } ${
+            balance >= 0 ? 'from-emerald-600 to-teal-800 shadow-emerald-950/30' : 'from-orange-600 to-rose-800 shadow-rose-950/30'
+          }`}
+          title={isMoneyHidden ? "Click to peek / reveal Current Balance" : undefined}
+        >
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
@@ -111,25 +145,36 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
               </div>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-extrabold tracking-tight font-amount">
-                {formatINR(balance)}
-              </span>
+              <PrivacyAmount 
+                amount={balance} 
+                id="summary_current_balance" 
+                className="text-2xl sm:text-3xl font-extrabold tracking-tight font-amount" 
+              />
             </div>
             <div className="flex flex-col mt-2 gap-1 text-xs font-medium">
               <p className="text-white/90">
-                This month: <span className="font-bold font-amount">{totalIncome - totalExpense >= 0 ? '+' : ''}{formatINR(totalIncome - totalExpense)}</span>
+                This month: <PrivacyAmount 
+                  amount={totalIncome - totalExpense} 
+                  id="summary_month_diff" 
+                  prefix={totalIncome - totalExpense >= 0 ? '+' : ''} 
+                  className="font-bold font-amount" 
+                />
               </p>
-              {previousBalance !== 0 && (
-                <p className="text-white/70 text-[11px] font-amount">
-                  Includes {formatINR(previousBalance)} rollover
-                </p>
-              )}
+              <p className="text-white/70 text-[11px] font-amount">
+                {accounts.length > 0 ? `Total across ${accounts.length} bank accounts` : (previousBalance !== 0 ? `Includes rollover` : 'All accounts synchronized')}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Top Category Card */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 hover:border-slate-700/80 transition-all">
+        <div 
+          onClick={() => isMoneyHidden && toggleRevealKey('summary_top_category')}
+          className={`bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 sm:p-6 shadow-xl border border-slate-800/80 hover:border-slate-700/80 transition-all ${
+            isMoneyHidden ? 'cursor-pointer hover:border-rose-500/40' : ''
+          }`}
+          title={isMoneyHidden ? "Click to peek / reveal Top Category" : undefined}
+        >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-slate-400 text-xs tracking-wider uppercase">
               Top Category
@@ -143,7 +188,7 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
               {topCategory ? topCategory[0] : 'None'}
             </span>
             <span className="text-slate-400 text-xs mt-1 font-amount font-semibold">
-              {topCategory ? formatINR(topCategory[1]) : '₹0.00'}
+              <PrivacyAmount amount={topCategory ? topCategory[1] : 0} id="summary_top_category" />
             </span>
           </div>
         </div>
@@ -177,10 +222,12 @@ export default function MonthlySummary({ transactions, currentDate, previousBala
                   <>
                     <span className="text-slate-400 text-xs mr-1 font-sans">Spent:</span>
                     <span className={isBudgetExceeded ? 'text-rose-400 font-bold' : 'text-slate-200'}>
-                      {formatINR(totalExpense)}
+                      <PrivacyAmount amount={totalExpense} id="summary_budget_spent" />
                     </span>
                     <span className="text-slate-500 mx-1 font-sans">/</span>
-                    <span className="text-emerald-400 font-bold">{formatINR(budgetGoal)}</span>
+                    <span className="text-emerald-400 font-bold">
+                      <PrivacyAmount amount={budgetGoal} id="summary_budget_goal" />
+                    </span>
                   </>
                 ) : (
                   <span className="text-slate-400 text-xs font-sans">No limit set</span>

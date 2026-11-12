@@ -4,6 +4,7 @@ import { auth } from './lib/firebase';
 import { Toaster } from 'react-hot-toast';
 import Dashboard from './components/Dashboard';
 import Auth from './components/Auth';
+import { PrivacyProvider } from './context/PrivacyContext';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -26,7 +27,7 @@ function App() {
   }
 
   return (
-    <>
+    <PrivacyProvider user={user}>
       <Toaster 
         position="top-center"
         toastOptions={{
@@ -50,7 +51,7 @@ function App() {
         }}
       />
       {user ? <Dashboard user={user} /> : <Auth />}
-    </>
+    </PrivacyProvider>
   );
 }
 

@@ -138,7 +138,7 @@ export default function LendingTab({ user }) {
             <p className="text-slate-500 mt-1 max-w-sm">Click "+ New Lending Entry" above to track money lent to others.</p>
           </div>
         ) : (
-          <div className="min-h-[460px] max-h-[640px] flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
+          <div className="max-h-[60vh] md:max-h-[68vh] overflow-y-auto custom-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4">
             {lends.map((lend) => (
               <div key={lend.id} className="group bg-slate-900/60 hover:bg-slate-900 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-800/80 hover:border-slate-700 transition-all gap-4">
                 <div className="flex items-start gap-4">

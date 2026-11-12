@@ -33,15 +33,21 @@ d:\MAIN CODING\live\expense-tracker\
 │   ├── main.jsx                  # Application Entry Point
 │   ├── App.jsx                   # Root Auth State Wrapper
 │   ├── index.css                 # Base Typography Scaling, Dark Mode & Custom Scrollbars
+│   ├── hooks/
+│   │   └── useUpcomingDues.js    # Smart EMI & SIP Due Date Engine
 │   ├── lib/
 │   │   ├── firebase.js           # Firebase App Initialization & Config
 │   │   ├── utils.js              # Currency Formatter (INR formatINR)
 │   │   └── expenseService.js     # Single Source of Truth for Firestore Queries & Data Operations
 │   └── components/
 │       ├── Dashboard.jsx         # Main Layout Container, Header Navigation & Tab Router
+│       ├── AccountCards.jsx      # Multi-Bank Accounts Bar, Live Balances & Filters
+│       ├── TransferModal.jsx     # Shift / Transfer Money Between Bank Accounts
+│       ├── ManageAccountsModal.jsx # Create/Edit Accounts & Batch Migrate Past Transactions
 │       ├── MonthlySummary.jsx    # Overview KPI Cards (Income, Expense, Net Balance, Budget Goal)
-│       ├── AddTransaction.jsx    # Add Income/Expense Form
-│       ├── TransactionList.jsx   # Recent Transactions List, Search, Filter & CSV Export
+│       ├── AddTransaction.jsx    # Add Income/Expense/Shift Transaction Form
+│       ├── TransactionList.jsx   # Recent Transactions List, Account Badges, Search, Filter & CSV Export
+│       ├── UpcomingDuesNotification.jsx # Notification Bell & Urgent Dues Alert Banner
 │       ├── AnalyticsTab.jsx      # Savings Rate, Expense Ratio, Category Share & Charts
 │       ├── LendingTab.jsx        # Money Lent to Friends/Family & Receivable Tracking
 │       ├── SipTab.jsx            # Mutual Fund SIP Investments Tracker & Allocation
@@ -60,8 +66,25 @@ d:\MAIN CODING\live\expense-tracker\
 - **Key Business Logic**:
   - **Rollover Balance**: Transactions prior to the active month are summed (`Income - Expense`) to compute `previousBalance`, which rolls over as the starting balance for the current month.
   - **Running Balance**: Each transaction calculates its real-time running balance chronologically.
-  - **CSV Statement Export**: Export monthly transaction records with headers (`Date`, `Type`, `Category`, `Description`, `Amount`, `Running Balance`).
+  - **CSV Statement Export**: Export monthly transaction records with headers (`Date`, `Type`, `Category`, `Account`, `Description`, `Amount`, `Running Balance`).
   - **Custom Categories**: Users can dynamically add custom categories stored in `userSettings/{userId}`.
+
+---
+
+### 2. 🏦 Multi-Bank Accounts & Internal Fund Shifting (`AccountCards.jsx`, `TransferModal.jsx`, `ManageAccountsModal.jsx`)
+- **Core Purpose**: Maintain exact parity between real bank account balances (HDFC, SBI, Cash, etc.) and the application balance.
+- **Key Business Logic**:
+  - **Multi-Account Schema**: Accounts are stored in `userSettings/{userId}` with fields (`id`, `name`, `type`, `openingBalance`, `color`, `isDefault`).
+  - **Zero Data Loss Guarantee**: Legacy transactions without an `accountId` automatically fall back to the default `Main Bank` with zero data migration required.
+  - **Live Per-Account Formula**:
+    $$\text{Balance}(\text{Account}) = \text{Opening Balance} + \sum \text{Incomes} - \sum \text{Expenses} + \sum \text{Transfers In} - \sum \text{Transfers Out}$$
+  - **Total Combined Balance**:
+    $$\text{Total Balance} = \sum_{\text{all accounts}} \text{Balance}(\text{Account})$$
+    Maintains total wealth visibility while allowing isolated tracking per account.
+  - **Internal Fund Shifting (`type === 'transfer'`)**: Moving money between accounts (e.g., ATM Cash withdrawal, Bank A $\rightarrow$ Bank B) without falsely inflating monthly income or expenses.
+  - **Batch Reassignment / Shift Past Transactions**: Tool in `ManageAccountsModal.jsx` to reassign historical transactions from one account to another in 1 click (with optional category filtering).
+  - **1-Click Filter Passbook**: Clicking any bank card filters the transaction list and running balance to that specific account.
+  - **Privacy Mode (Hide Money / `₹••••••` with Tap-to-Peek)**: Quick-toggle Eye button in the header masks all currency values across the app. When active, clicking on any specific card or amount temporarily reveals only that number while all other amounts stay masked. Privacy state automatically synchronizes to both `localStorage` and Firestore `userSettings/{userId}.hideMoney` to persist across page reloads and logins.
 
 ---
 

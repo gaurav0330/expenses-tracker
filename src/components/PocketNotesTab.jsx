@@ -266,7 +266,7 @@ export default function PocketNotesTab({ user }) {
         </div>
 
         {/* List Column */}
-        <div className="lg:col-span-2 bg-[#111827] rounded-3xl p-5 sm:p-7 shadow-2xl border border-slate-800/80 flex flex-col min-h-[560px] max-h-[720px] overflow-hidden">
+        <div className="lg:col-span-2 bg-[#111827] rounded-3xl p-4 sm:p-6 lg:p-7 shadow-2xl border border-slate-800/80 flex flex-col h-[520px] sm:h-[580px] lg:h-[640px] xl:h-[700px] overflow-hidden">
           <div className="flex flex-wrap items-center justify-between mb-6 gap-3">
             <h2 className="text-xl font-bold flex items-center gap-2 text-slate-100">
               <StickyNote className="w-5 h-5 text-amber-400" />
@@ -309,7 +309,7 @@ export default function PocketNotesTab({ user }) {
               <p className="text-slate-500 mt-1 max-w-[250px]">Keep money received from your father or separate notes isolated here!</p>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1 sm:pr-2 custom-scrollbar">
               {filteredEntries.map((item) => {
                 const isRec = item.type === 'received';
                 const isSpent = item.type === 'spent';
