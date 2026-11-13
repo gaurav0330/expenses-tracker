@@ -2,6 +2,8 @@ import { Landmark, Building2, Wallet, CreditCard, ArrowRightLeft, Settings, Chec
 import { usePrivacy } from '../hooks/usePrivacy';
 import { PrivacyAmount } from '../context/PrivacyContext';
 
+
+
 export default function AccountCards({
   accounts = [],
   accountBalances = {},
