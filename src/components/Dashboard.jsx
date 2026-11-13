@@ -212,26 +212,26 @@ export default function Dashboard({ user }) {
   };
 
   return (
-    <div className="min-h-screen text-slate-100 selection:bg-emerald-500/30">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-4 sm:py-8">
+    <div className="min-h-screen text-slate-100 selection:bg-emerald-500/30 overflow-x-hidden">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-8 py-3.5 sm:py-8">
         
-        <header className="flex flex-col xl:flex-row xl:items-center justify-between mb-6 sm:mb-8 gap-4 xl:gap-6 bg-[#111827] p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-2xl">
-          <div className="flex items-center justify-between w-full xl:w-auto shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 shrink-0">
-                <LayoutDashboard className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        <header className="flex flex-col xl:flex-row xl:items-center justify-between mb-6 sm:mb-8 gap-3 sm:gap-4 xl:gap-6 bg-[#111827] p-3 sm:p-5 rounded-3xl border border-slate-800 shadow-2xl">
+          <div className="flex items-center justify-between w-full xl:w-auto gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 shrink-0">
+                <LayoutDashboard className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight">ExpenseTracker</h1>
-                <p className="text-slate-400 text-xs sm:text-sm font-medium">Intelligent Money & Asset Management</p>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-2xl font-extrabold text-white tracking-tight truncate">ExpenseTracker</h1>
+                <p className="text-slate-400 text-xs sm:text-sm font-medium hidden sm:block">Intelligent Money & Asset Management</p>
               </div>
             </div>
             
             {/* Mobile / Tablet Controls */}
-            <div className="flex xl:hidden items-center gap-2">
+            <div className="flex xl:hidden items-center gap-1.5 shrink-0">
               <button
                 onClick={handleTogglePrivacy}
-                className={`p-2 rounded-xl border transition-all ${
+                className={`p-2 rounded-xl border transition-all shrink-0 ${
                   isMoneyHidden 
                     ? 'bg-amber-500/15 border-amber-500/40 text-amber-400' 
                     : 'bg-slate-800/80 border-slate-700/60 text-slate-300 hover:text-white'
@@ -250,13 +250,13 @@ export default function Dashboard({ user }) {
 
               <button
                 onClick={() => setIsProfileOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/60 transition-all font-bold text-xs shadow-md"
+                className="p-1.5 sm:px-3 sm:py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/60 transition-all font-bold text-xs shadow-md shrink-0 flex items-center gap-1.5"
                 title="View Profile & Financial Summary"
               >
                 <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center font-extrabold text-[10px]">
                   {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
                 </div>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded-md">
+                <span className="hidden sm:inline-block text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded-md">
                   Profile
                 </span>
               </button>

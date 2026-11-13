@@ -59,34 +59,30 @@ export function PrivacyProvider({ children, user }) {
 
   // 3. Toggle Global Privacy (The Eye Button)
   const toggleGlobalPrivacy = useCallback(async () => {
-    setIsMoneyHidden((prev) => {
-      const next = !prev;
-      setGlobalMoneyHidden(next);
-      
+    const next = !isMoneyHidden;
+    setIsMoneyHidden(next);
+    setGlobalMoneyHidden(next);
+    
+    try {
+      localStorage.setItem('hide_money_privacy', next ? 'true' : 'false');
+    } catch {}
+
+    // Save to Firestore so it persists across devices & logins
+    if (user?.uid) {
       try {
-        localStorage.setItem('hide_money_privacy', next ? 'true' : 'false');
-      } catch {}
-
-      // Save to Firestore so it persists across devices & logins
-      if (user?.uid) {
-        try {
-          setDoc(doc(db, 'userSettings', user.uid), { hideMoney: next }, { merge: true });
-        } catch (err) {
-          console.error('Failed to save privacy preference:', err);
-        }
+        setDoc(doc(db, 'userSettings', user.uid), { hideMoney: next }, { merge: true });
+      } catch (err) {
+        console.error('Failed to save privacy preference:', err);
       }
+    }
 
-      // If turning OFF privacy mode, reset individual revealed keys
-      if (!next) {
-        setRevealedKeys(new Set());
-        toast('Privacy Mode: Balances visible', { icon: '👁️' });
-      } else {
-        toast('Privacy Mode: Balances hidden (****)', { icon: '🔒' });
-      }
-
-      return next;
-    });
-  }, [user?.uid]);
+    if (!next) {
+      setRevealedKeys(new Set());
+      toast('Privacy Mode: Balances visible', { id: 'privacy-toggle-toast', icon: '👁️' });
+    } else {
+      toast('Privacy Mode: Balances hidden (****)', { id: 'privacy-toggle-toast', icon: '🔒' });
+    }
+  }, [isMoneyHidden, user?.uid]);
 
   // 4. Toggle Peek/Reveal for an individual card or number
   const toggleRevealKey = useCallback((key) => {

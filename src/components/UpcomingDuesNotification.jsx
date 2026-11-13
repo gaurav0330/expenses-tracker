@@ -49,7 +49,7 @@ export function NotificationBell({ upcomingDues = [], urgentDues = [], totalUrge
       {/* Notification Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white rounded-2xl border border-slate-800 hover:border-amber-500/40 transition-all shadow-md flex items-center justify-center shrink-0 cursor-pointer"
+        className="relative p-2 sm:p-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl sm:rounded-2xl border border-slate-800 hover:border-amber-500/40 transition-all shadow-md flex items-center justify-center shrink-0 cursor-pointer"
         title="Upcoming EMI & SIP Payment Reminders"
         aria-label="Upcoming Payment Reminders"
       >
@@ -67,7 +67,13 @@ export function NotificationBell({ upcomingDues = [], urgentDues = [], totalUrge
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-[#111827] border border-slate-800 rounded-3xl shadow-2xl z-50 overflow-hidden animate-fadeIn">
+        <>
+          {/* Mobile Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 z-40 sm:hidden backdrop-blur-xs" 
+            onClick={() => setIsOpen(false)} 
+          />
+          <div className="fixed left-3 right-3 top-20 sm:top-auto sm:left-auto sm:right-0 sm:absolute sm:mt-3 sm:w-96 bg-[#111827] border border-slate-800 rounded-3xl shadow-2xl z-50 overflow-hidden animate-fadeIn max-h-[82vh] flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-slate-800/80 bg-slate-900/80 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -187,6 +193,7 @@ export function NotificationBell({ upcomingDues = [], urgentDues = [], totalUrge
             )}
           </div>
         </div>
+        </>
       )}
     </div>
   );

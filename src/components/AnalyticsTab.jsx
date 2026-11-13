@@ -107,7 +107,8 @@ const CustomPieTooltip = ({ active, payload }) => {
 export default function AnalyticsTab({ transactions }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const expenses = transactions.filter(t => t.type !== 'income');
+  // Internal bank-to-bank transfers are excluded from expenses & income analytics
+  const expenses = transactions.filter(t => t.type === 'expense');
   const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
   const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
   const netSavings = totalIncome - totalExpense;
