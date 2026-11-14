@@ -4,6 +4,7 @@ import { NotebookPen, Trash2, ArrowUpRight, ArrowDownRight, StickyNote, Landmark
 import { addPocketEntry, getPocketEntries, deletePocketEntry } from '../lib/expenseService';
 import toast from 'react-hot-toast';
 import { formatINR } from '../lib/utils';
+import LoadingScreen from './LoadingScreen';
 
 export default function PocketNotesTab({ user }) {
   const [entries, setEntries] = useState([]);
@@ -297,9 +298,7 @@ export default function PocketNotesTab({ user }) {
           </div>
 
           {isLoading ? (
-            <div className="flex-1 flex justify-center items-center">
-              <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
-            </div>
+            <LoadingScreen fullScreen={false} size="sm" message="Loading pocket notes..." subtext="" />
           ) : filteredEntries.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center">
               <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">

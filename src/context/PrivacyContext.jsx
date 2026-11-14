@@ -76,6 +76,7 @@ export function PrivacyProvider({ children, user }) {
       }
     }
 
+    toast.dismiss();
     if (!next) {
       setRevealedKeys(new Set());
       toast('Privacy Mode: Balances visible', { id: 'privacy-toggle-toast', icon: '👁️' });

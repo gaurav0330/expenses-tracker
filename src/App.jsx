@@ -4,6 +4,7 @@ import { auth } from './lib/firebase';
 import { Toaster } from 'react-hot-toast';
 import Dashboard from './components/Dashboard';
 import Auth from './components/Auth';
+import LoadingScreen from './components/LoadingScreen';
 import { PrivacyProvider } from './context/PrivacyContext';
 
 function App() {
@@ -19,11 +20,7 @@ function App() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -32,9 +29,15 @@ function App() {
         position="top-center"
         toastOptions={{
           style: {
-            background: '#1e293b',
+            background: 'rgba(15, 23, 42, 0.95)',
             color: '#fff',
-            borderRadius: '12px',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(16px)',
+            boxShadow: '0 20px 40px -15px rgba(0,0,0,0.7)',
+            fontSize: '13px',
+            fontWeight: '600',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
           },
           success: {
             iconTheme: {

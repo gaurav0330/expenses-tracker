@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, CreditCard, TrendingUp, X, CheckCircle, AlertTriangle, ArrowRight, Volume2 } from 'lucide-react';
 import { formatINR } from '../lib/utils';
+import { PrivacyAmount } from '../context/PrivacyContext';
 import toast from 'react-hot-toast';
 
 export function NotificationBell({ upcomingDues = [], urgentDues = [], totalUrgentAmount = 0, onNavigateTab }) {
@@ -70,25 +71,25 @@ export function NotificationBell({ upcomingDues = [], urgentDues = [], totalUrge
         <>
           {/* Mobile Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/60 z-40 sm:hidden backdrop-blur-xs" 
+            className="fixed inset-0 bg-black/70 z-40 sm:hidden backdrop-blur-sm" 
             onClick={() => setIsOpen(false)} 
           />
-          <div className="fixed left-3 right-3 top-20 sm:top-auto sm:left-auto sm:right-0 sm:absolute sm:mt-3 sm:w-96 bg-[#111827] border border-slate-800 rounded-3xl shadow-2xl z-50 overflow-hidden animate-fadeIn max-h-[82vh] flex flex-col">
+          <div className="fixed left-3 right-3 top-20 sm:top-auto sm:left-auto sm:right-0 sm:absolute sm:mt-3 sm:w-96 fintech-card border border-white/[0.1] rounded-3xl shadow-2xl z-50 overflow-hidden animate-fadeIn max-h-[82vh] flex flex-col backdrop-blur-2xl">
           {/* Header */}
-          <div className="p-4 border-b border-slate-800/80 bg-slate-900/80 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-amber-500/10 text-amber-400 rounded-lg">
+          <div className="p-4 border-b border-white/[0.06] bg-dark-950/70 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
                 <Bell className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="font-bold text-sm text-slate-100">Payment Reminders</h4>
+                <h4 className="font-extrabold text-sm text-white tracking-tight">Payment Reminders</h4>
                 <p className="text-[11px] text-slate-400">EMIs & SIP auto-debit alerts</p>
               </div>
             </div>
             
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+              className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -96,11 +97,11 @@ export function NotificationBell({ upcomingDues = [], urgentDues = [], totalUrge
 
           {/* Urgent Alert Callout inside Dropdown */}
           {urgentDues.length > 0 && (
-            <div className="m-3 p-3 bg-gradient-to-r from-amber-500/15 to-rose-500/15 border border-amber-500/30 rounded-2xl flex items-start gap-2.5">
+            <div className="m-3 p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-start gap-2.5 backdrop-blur-md">
               <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <div className="text-xs">
                 <span className="font-bold text-amber-300 block">
-                  Keep {formatINR(totalUrgentAmount)} in your bank account!
+                  Keep <PrivacyAmount amount={totalUrgentAmount} id="notif_urgent_total" /> in your bank account!
                 </span>
                 <span className="text-slate-300 text-[11px] mt-0.5 block">
                   {urgentDues.length} payment(s) auto-debiting in the next 1–2 days.
@@ -110,7 +111,7 @@ export function NotificationBell({ upcomingDues = [], urgentDues = [], totalUrge
           )}
 
           {/* Dues List */}
-          <div className="max-h-72 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+          <div className="max-h-72 overflow-y-auto p-2.5 space-y-2 custom-scrollbar">
             {upcomingDues.length === 0 ? (
               <div className="py-8 text-center text-slate-500 text-xs">
                 <CheckCircle className="w-8 h-8 text-emerald-500/40 mx-auto mb-2" />
@@ -128,22 +129,22 @@ export function NotificationBell({ upcomingDues = [], urgentDues = [], totalUrge
                   }}
                   className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                     item.isUrgent
-                      ? 'bg-rose-500/10 border-rose-500/30 hover:bg-rose-500/20'
-                      : 'bg-slate-900/50 border-slate-800/80 hover:bg-slate-900'
+                      ? 'bg-rose-500/10 border-rose-500/30 hover:bg-rose-500/15'
+                      : 'bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.06] hover:border-white/[0.1]'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
                       item.type === 'EMI' 
-                        ? 'bg-purple-500/20 text-purple-400' 
-                        : 'bg-cyan-500/20 text-cyan-400'
+                        ? 'bg-purple-500/15 text-purple-400 border-purple-500/30' 
+                        : 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
                     }`}>
                       {item.type === 'EMI' ? <CreditCard className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-200 truncate">{item.title}</span>
-                        <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded ${
+                        <span className="text-xs font-bold text-white truncate">{item.title}</span>
+                        <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
                           item.type === 'EMI' ? 'bg-purple-500/20 text-purple-300' : 'bg-cyan-500/20 text-cyan-300'
                         }`}>
                           {item.type}
@@ -155,7 +156,7 @@ export function NotificationBell({ upcomingDues = [], urgentDues = [], totalUrge
 
                   <div className="text-right shrink-0">
                     <span className="text-xs sm:text-sm font-bold text-white font-amount block">
-                      {formatINR(item.amount)}
+                      <PrivacyAmount amount={item.amount} id={`due_${item.id}`} />
                     </span>
                     <span className={`text-[10px] font-extrabold block mt-0.5 ${
                       item.daysUntil === 0 
@@ -173,7 +174,7 @@ export function NotificationBell({ upcomingDues = [], urgentDues = [], totalUrge
           </div>
 
           {/* Footer with Browser Alert Toggle */}
-          <div className="p-3 border-t border-slate-800 bg-slate-900/80 flex items-center justify-between text-xs">
+          <div className="p-3 border-t border-white/[0.06] bg-dark-950/70 flex items-center justify-between text-xs">
             <span className="text-slate-400 flex items-center gap-1.5 text-[11px]">
               <Volume2 className="w-3.5 h-3.5 text-slate-400" />
               Desktop Alerts:
@@ -205,16 +206,22 @@ export function UrgentDuesBanner({ urgentDues = [], totalAmount = 0, onNavigate 
   if (!urgentDues || urgentDues.length === 0 || isDismissed) return null;
 
   return (
-    <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-rose-500/15 border border-amber-500/30 rounded-3xl p-4 sm:p-5 mb-6 shadow-2xl relative overflow-hidden animate-fadeIn">
+    <div className="fintech-card border border-amber-500/30 rounded-3xl p-4 sm:p-5 mb-6 shadow-2xl relative overflow-hidden animate-fadeIn">
+      {/* Subtle Warm Amber Halos */}
+      <div className="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-        <div className="flex items-start gap-3.5">
-          <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-2xl shrink-0 mt-0.5">
+        <div className="flex items-start gap-3.5 min-w-0">
+          <div className="p-2.5 bg-amber-500/15 text-amber-400 rounded-2xl shrink-0 mt-0.5 border border-amber-500/25">
             <AlertTriangle className="w-5 h-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="font-extrabold text-sm sm:text-base text-amber-200">
-                Bank Balance Reminder: {formatINR(totalAmount)} Required in Bank Account!
+              <h4 className="font-extrabold text-sm sm:text-base text-amber-200 tracking-tight flex items-center gap-1.5 flex-wrap">
+                <span>Bank Balance Reminder:</span>
+                <PrivacyAmount amount={totalAmount} id="banner_urgent_total" className="text-amber-300 font-amount font-extrabold" />
+                <span>Required in Bank Account!</span>
               </h4>
               <span className="text-[10px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-md uppercase">
                 Due in 1–2 Days
@@ -230,13 +237,15 @@ export function UrgentDuesBanner({ urgentDues = [], totalAmount = 0, onNavigate 
                 <button
                   key={due.id}
                   onClick={() => onNavigate(due.type === 'EMI' ? 'emis' : 'sips')}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-slate-900/90 hover:bg-slate-800 rounded-xl border border-slate-700/80 text-xs font-semibold text-slate-200 hover:text-white transition-all shadow-sm cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-dark-950/80 hover:bg-dark-900 rounded-xl border border-white/[0.08] text-xs font-semibold text-slate-200 hover:text-white transition-all shadow-sm cursor-pointer"
                 >
                   <span className={due.type === 'EMI' ? 'text-purple-400 font-bold' : 'text-cyan-400 font-bold'}>
                     {due.type}:
                   </span>
-                  <span>{due.title}</span>
-                  <span className="font-amount font-bold text-amber-400">({formatINR(due.amount)})</span>
+                  <span className="truncate max-w-[140px]">{due.title}</span>
+                  <span className="text-amber-300 font-amount font-bold">
+                    (<PrivacyAmount amount={due.amount} id={`due_${due.id}`} />)
+                  </span>
                   <span className="text-[10px] text-rose-400 font-bold">[{due.dateLabel}]</span>
                 </button>
               ))}
@@ -247,14 +256,14 @@ export function UrgentDuesBanner({ urgentDues = [], totalAmount = 0, onNavigate 
         <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
           <button
             onClick={() => onNavigate(urgentDues[0].type === 'EMI' ? 'emis' : 'sips')}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition-all active:scale-95 cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/25 transition-all active:scale-95 cursor-pointer"
           >
             Review Details <ArrowRight className="w-3.5 h-3.5" />
           </button>
           
           <button
             onClick={() => setIsDismissed(true)}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800/60 rounded-xl transition-all cursor-pointer"
+            className="p-2 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-xl transition-all cursor-pointer"
             title="Dismiss alert for this session"
           >
             <X className="w-4 h-4" />

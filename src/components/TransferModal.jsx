@@ -1,7 +1,8 @@
-import { useState, useId } from 'react';
-import { X, ArrowRightLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useState, useId, useMemo } from 'react';
+import { X, ArrowRightLeft, ArrowRight, CheckCircle2, Building2 } from 'lucide-react';
 import { formatINR } from '../lib/utils';
 import { format } from 'date-fns';
+import CustomDropdown from './CustomDropdown';
 import toast from 'react-hot-toast';
 
 export default function TransferModal({ 
@@ -23,6 +24,22 @@ export default function TransferModal({
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const accountOptions = useMemo(() => {
+    return accounts.map(acc => {
+      const bal = accountBalances[acc.id] ?? (Number(acc.openingBalance) || 0);
+      return {
+        value: acc.id,
+        label: `${acc.name} (${acc.type.toUpperCase()})`,
+        subtext: formatINR(bal)
+      };
+    });
+  }, [accounts, accountBalances]);
+
+  const fromAccountOptions = accountOptions;
+  const toAccountOptions = useMemo(() => {
+    return accountOptions.filter(opt => opt.value !== fromAccountId);
+  }, [accountOptions, fromAccountId]);
 
   if (!isOpen) return null;
 
@@ -85,17 +102,17 @@ export default function TransferModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#111827] border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div className="fintech-card border border-white/[0.1] rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
         
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+        <div className="p-5 sm:p-6 border-b border-white/[0.06] flex items-center justify-between bg-dark-950/60">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
               <ArrowRightLeft className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 tracking-tight">
                 Shift / Transfer Money
               </h2>
               <p className="text-slate-400 text-xs">
@@ -105,7 +122,7 @@ export default function TransferModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
+            className="p-2 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-xl transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -115,30 +132,25 @@ export default function TransferModal({
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-5">
           
           {/* Account Selection Box with Swap */}
-          <div className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800/80 space-y-3">
+          <div className="bg-dark-950/70 rounded-2xl p-4 border border-white/[0.06] space-y-3">
             
             {/* From Account */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor={fromSelectId} className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <label htmlFor={fromSelectId} className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-indigo-400" />
                   From (Debit)
                 </label>
                 <span className="text-xs font-amount text-slate-400">
                   Balance: <span className={fromBalance >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{formatINR(fromBalance)}</span>
                 </span>
               </div>
-              <select
-                id={fromSelectId}
+              <CustomDropdown
                 value={fromAccountId}
-                onChange={(e) => setFromAccountId(e.target.value)}
-                className="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer shadow-inner"
-              >
-                {accounts.map(acc => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name} ({acc.type.toUpperCase()}) — {formatINR(accountBalances[acc.id] ?? acc.openingBalance)}
-                  </option>
-                ))}
-              </select>
+                onChange={setFromAccountId}
+                options={fromAccountOptions}
+                placeholder="Select Source Account"
+              />
             </div>
 
             {/* Swap Button */}
@@ -146,7 +158,7 @@ export default function TransferModal({
               <button
                 type="button"
                 onClick={handleSwap}
-                className="p-1.5 bg-slate-800 hover:bg-indigo-600/30 text-indigo-400 hover:text-indigo-300 rounded-full border border-slate-700 transition-all shadow-md active:scale-95"
+                className="p-2 bg-slate-800 hover:bg-indigo-600/30 text-indigo-400 hover:text-indigo-300 rounded-full border border-slate-700 transition-all shadow-md active:scale-95 cursor-pointer"
                 title="Swap From and To accounts"
               >
                 <ArrowRightLeft className="w-4 h-4 rotate-90" />
@@ -156,25 +168,20 @@ export default function TransferModal({
             {/* To Account */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor={toSelectId} className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <label htmlFor={toSelectId} className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-indigo-400" />
                   To (Credit)
                 </label>
                 <span className="text-xs font-amount text-slate-400">
                   Balance: <span className={toBalance >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{formatINR(toBalance)}</span>
                 </span>
               </div>
-              <select
-                id={toSelectId}
+              <CustomDropdown
                 value={toAccountId}
-                onChange={(e) => setToAccountId(e.target.value)}
-                className="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer shadow-inner"
-              >
-                {accounts.map(acc => (
-                  <option key={acc.id} value={acc.id} disabled={acc.id === fromAccountId}>
-                    {acc.name} ({acc.type.toUpperCase()}) {acc.id === fromAccountId ? '(Selected above)' : `— ${formatINR(accountBalances[acc.id] ?? acc.openingBalance)}`}
-                  </option>
-                ))}
-              </select>
+                onChange={setToAccountId}
+                options={toAccountOptions}
+                placeholder="Select Destination Account"
+              />
             </div>
           </div>
 

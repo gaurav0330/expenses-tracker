@@ -729,3 +729,65 @@ export const payEmiInstallment = async (id, currentPaidCount, totalTenure) => {
   }
 };
 
+// --- Recurring Subscriptions Tracker ---
+
+const SUBSCRIPTIONS_COLLECTION = "subscriptions";
+
+export const addSubscription = async (userId, data) => {
+  try {
+    const docRef = await addDoc(collection(db, SUBSCRIPTIONS_COLLECTION), {
+      ...data,
+      userId,
+      amount: parseFloat(data.amount) || 0,
+      renewalDay: parseInt(data.renewalDay, 10) || 1,
+      billingCycle: data.billingCycle || 'monthly',
+      status: data.status || 'active',
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding subscription: ", error);
+    throw error;
+  }
+};
+
+export const getSubscriptions = async (userId) => {
+  try {
+    const q = query(
+      collection(db, SUBSCRIPTIONS_COLLECTION),
+      where("userId", "==", userId)
+    );
+    const querySnapshot = await getDocs(q);
+    const subs = [];
+    querySnapshot.forEach((doc) => {
+      subs.push({ id: doc.id, ...doc.data() });
+    });
+    return subs.sort((a, b) => (a.renewalDay || 1) - (b.renewalDay || 1));
+  } catch (error) {
+    if (error.code === 'permission-denied') {
+      console.warn("Firestore Notice: The 'subscriptions' rule needs to be published to your Firebase Console.");
+      return [];
+    }
+    console.error("Error getting subscriptions: ", error);
+    return [];
+  }
+};
+
+export const updateSubscription = async (id, data) => {
+  try {
+    await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, id), data);
+  } catch (error) {
+    console.error("Error updating subscription: ", error);
+    throw error;
+  }
+};
+
+export const deleteSubscription = async (id) => {
+  try {
+    await deleteDoc(doc(db, SUBSCRIPTIONS_COLLECTION, id));
+  } catch (error) {
+    console.error("Error deleting subscription: ", error);
+    throw error;
+  }
+};
+

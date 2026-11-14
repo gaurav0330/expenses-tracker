@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { LayoutDashboard, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import Logo from './Logo';
 import toast from 'react-hot-toast';
 
 export default function Auth() {
@@ -40,10 +41,12 @@ export default function Auth() {
 
       <div className="w-full max-w-md relative z-10">
         <div className="flex flex-col items-center mb-8 text-center">
-          <div className="w-18 h-18 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-emerald-500/25 mb-4 rotate-3">
-            <LayoutDashboard className="w-9 h-9 text-white -rotate-3" />
+          <div className="mb-4">
+            <Logo size="xl" />
           </div>
-          <h1 className="text-3xl font-extrabold text-white mb-2 tracking-tight">ExpenseTracker</h1>
+          <h1 className="text-3xl font-extrabold text-white mb-1 tracking-tight">
+            Expense<span className="text-emerald-400">Tracker</span>
+          </h1>
           <p className="text-slate-400 font-medium text-sm">Intelligent Money & Asset Management</p>
         </div>
 

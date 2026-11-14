@@ -5,6 +5,8 @@ import { addPetrolLog, getPetrolLogs, deletePetrolLog, updatePetrolLog } from '.
 import toast from 'react-hot-toast';
 import { formatINR } from '../lib/utils';
 import { format } from 'date-fns';
+import LoadingScreen from './LoadingScreen';
+import CustomDropdown from './CustomDropdown';
 
 export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
   const TODAY = format(new Date(), 'yyyy-MM-dd');
@@ -291,44 +293,44 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
         </div>
 
         {/* Cost per KM */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 shadow-xl border border-slate-800/80 transition-all flex items-center justify-between">
+        <div className="fintech-card rounded-3xl p-5 shadow-xl border border-white/[0.08] hover:border-amber-500/30 transition-all flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Cost per KM</p>
             <h3 className="text-2xl font-extrabold text-amber-400 font-amount">₹{costPerKm} <span className="text-xs text-slate-400 font-normal">/ km</span></h3>
             <p className="text-xs text-slate-500 mt-1">running cost</p>
           </div>
-          <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
+          <div className="p-3 bg-amber-500/10 text-amber-400 rounded-2xl border border-amber-500/20">
             <Navigation className="w-6 h-6" />
           </div>
         </div>
 
         {/* Total Distance Covered */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 shadow-xl border border-slate-800/80 transition-all flex items-center justify-between">
+        <div className="fintech-card rounded-3xl p-5 shadow-xl border border-white/[0.08] hover:border-cyan-500/30 transition-all flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Distance Tracked</p>
             <h3 className="text-2xl font-extrabold text-cyan-400 font-amount">{totalDistance.toLocaleString()} <span className="text-xs text-slate-400 font-normal">km</span></h3>
             <p className="text-xs text-slate-500 mt-1">odometer range</p>
           </div>
-          <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl">
+          <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-2xl border border-cyan-500/20">
             <Activity className="w-6 h-6" />
           </div>
         </div>
 
         {/* Total Petrol Spent */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 shadow-xl border border-slate-800/80 transition-all flex items-center justify-between">
+        <div className="fintech-card rounded-3xl p-5 shadow-xl border border-white/[0.08] hover:border-emerald-500/30 transition-all flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Petrol Spent</p>
             <h3 className="text-2xl font-extrabold text-emerald-400 font-amount">{formatINR(totalSpent)}</h3>
             <p className="text-xs text-slate-500 mt-1">{totalLiters.toFixed(1)} Liters filled</p>
           </div>
-          <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+          <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">
             <Fuel className="w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* Main Full-Width Log History Section */}
-      <div className="bg-[#111827] rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800/80 space-y-6">
+      <div className="fintech-card rounded-3xl p-5 sm:p-8 shadow-2xl border border-white/[0.08] space-y-6 relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
@@ -438,9 +440,7 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
         </div>
 
         {isLoading ? (
-          <div className="py-20 flex justify-center items-center">
-            <div className="w-10 h-10 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
-          </div>
+          <LoadingScreen fullScreen={false} size="sm" message="Loading fuel & mileage data..." subtext="" />
         ) : filteredDisplayLogs.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center text-center">
             <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
@@ -554,7 +554,7 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
 
       {/* Analytics & Charts Section */}
       {chartData.length > 0 && (
-        <div className="bg-[#111827] rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800/80 space-y-6">
+        <div className="fintech-card rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/[0.08] space-y-6 relative overflow-hidden">
           <h2 className="text-xl font-bold flex items-center gap-2 text-white">
             <Gauge className="w-5 h-5 text-amber-400" />
             Fuel & Mileage Analytics
@@ -659,8 +659,8 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
 
       {/* --- ADD PETROL MODAL --- */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
+          <div className="fintech-card border border-white/[0.1] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <PlusCircle className="w-6 h-6 text-amber-400" />
@@ -860,8 +860,8 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
 
       {/* --- EDIT LOG MODAL --- */}
       {editingLog && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
+          <div className="fintech-card border border-white/[0.1] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Pencil className="w-5 h-5 text-amber-400" />
@@ -878,14 +878,15 @@ export default function PetrolTab({ user, onSyncExpense, onDeleteExpense }) {
             <form onSubmit={handleUpdate} className="space-y-5">
               <div>
                 <label className="block text-sm font-semibold text-slate-300 mb-2">Event Type</label>
-                <select
+                <CustomDropdown
                   value={editEventType}
-                  onChange={(e) => setEditEventType(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-3.5 text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                >
-                  <option value="refuel">Petrol Fill</option>
-                  <option value="reserve">Hit Reserve</option>
-                </select>
+                  onChange={setEditEventType}
+                  options={[
+                    { value: 'refuel', label: 'Petrol Fill' },
+                    { value: 'reserve', label: 'Hit Reserve' }
+                  ]}
+                  placeholder="Select Event Type"
+                />
               </div>
 
               <div>

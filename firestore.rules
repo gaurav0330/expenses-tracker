@@ -41,5 +41,10 @@ service cloud.firestore {
     match /emis/{docId} {
       allow read, write: if isAuthenticated();
     }
+
+    // Recurring Subscriptions collection
+    match /subscriptions/{docId} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }

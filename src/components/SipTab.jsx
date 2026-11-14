@@ -5,6 +5,7 @@ import { addSip, getSips, deleteSip, updateSip } from '../lib/expenseService';
 import toast from 'react-hot-toast';
 import { formatINR } from '../lib/utils';
 import { format } from 'date-fns';
+import LoadingScreen from './LoadingScreen';
 
 const COLORS = ['#06b6d4', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#f43f5e'];
 
@@ -251,31 +252,31 @@ export default function SipTab({ user }) {
         </div>
 
         {/* Active Funds Count */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 shadow-xl border border-slate-800/80 transition-all flex items-center justify-between">
+        <div className="fintech-card rounded-3xl p-5 shadow-xl border border-white/[0.08] hover:border-cyan-500/30 transition-all flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Active SIP Funds</p>
             <h3 className="text-2xl font-extrabold text-cyan-400 font-amount">{activeFundsCount}</h3>
             <p className="text-xs text-slate-500 mt-1">total portfolios</p>
           </div>
-          <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl">
+          <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-2xl border border-cyan-500/20">
             <Layers className="w-6 h-6" />
           </div>
         </div>
 
         {/* Average SIP Amount */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 shadow-xl border border-slate-800/80 transition-all flex items-center justify-between">
+        <div className="fintech-card rounded-3xl p-5 shadow-xl border border-white/[0.08] hover:border-blue-500/30 transition-all flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Average per Fund</p>
             <h3 className="text-2xl font-extrabold text-blue-400 font-amount">{formatINR(avgSipAmount)}</h3>
             <p className="text-xs text-slate-500 mt-1">avg monthly investment</p>
           </div>
-          <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
+          <div className="p-3 bg-blue-500/10 text-blue-400 rounded-2xl border border-blue-500/20">
             <Wallet className="w-6 h-6" />
           </div>
         </div>
 
         {/* Top Fund Allocation Share */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 shadow-xl border border-slate-800/80 transition-all flex items-center justify-between">
+        <div className="fintech-card rounded-3xl p-5 shadow-xl border border-white/[0.08] hover:border-purple-500/30 transition-all flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Top Fund Allocation</p>
             <h3 className="text-2xl font-extrabold text-purple-400 font-amount">{topFundShare}%</h3>
@@ -283,14 +284,14 @@ export default function SipTab({ user }) {
               {fundAnalytics.length > 0 ? fundAnalytics[0].name : 'No SIPs'}
             </p>
           </div>
-          <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl">
+          <div className="p-3 bg-purple-500/10 text-purple-400 rounded-2xl border border-purple-500/20">
             <PieIcon className="w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* Main Full-Width Active SIPs List */}
-      <div className="bg-[#111827] rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800/80 space-y-6">
+      <div className="fintech-card rounded-3xl p-5 sm:p-8 shadow-2xl border border-white/[0.08] space-y-6 relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
@@ -312,9 +313,7 @@ export default function SipTab({ user }) {
         </div>
         
         {isLoading ? (
-          <div className="py-20 flex justify-center items-center">
-            <div className="w-10 h-10 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-          </div>
+          <LoadingScreen fullScreen={false} size="sm" message="Loading SIP investments..." subtext="" />
         ) : sips.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center text-center">
             <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
@@ -373,7 +372,7 @@ export default function SipTab({ user }) {
 
       {/* SIP Analytics Section */}
       {sips.length > 0 && (
-        <div className="bg-[#111827] rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800/80 space-y-6">
+        <div className="fintech-card rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/[0.08] space-y-6 relative overflow-hidden">
           <h2 className="text-xl font-bold flex items-center gap-2 text-white">
             <PieIcon className="w-5 h-5 text-cyan-400" />
             SIP Investment Breakdown & Analytics
@@ -441,8 +440,8 @@ export default function SipTab({ user }) {
 
       {/* --- ADD SIP MODAL --- */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
+          <div className="fintech-card border border-white/[0.1] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <PlusCircle className="w-6 h-6 text-cyan-400" />
@@ -558,8 +557,8 @@ export default function SipTab({ user }) {
 
       {/* --- EDIT SIP MODAL --- */}
       {editingSip && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
+          <div className="fintech-card border border-white/[0.1] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Pencil className="w-5 h-5 text-cyan-400" />

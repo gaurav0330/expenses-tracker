@@ -7,6 +7,8 @@ import {
 import { addEmi, getEmis, updateEmi, deleteEmi, payEmiInstallment, addTransaction } from '../lib/expenseService';
 import toast from 'react-hot-toast';
 import { formatINR } from '../lib/utils';
+import LoadingScreen from './LoadingScreen';
+import CustomDropdown from './CustomDropdown';
 
 export default function EmiTab({ user, onTransactionAdded }) {
   const [emis, setEmis] = useState([]);
@@ -270,44 +272,44 @@ export default function EmiTab({ user, onTransactionAdded }) {
         </div>
 
         {/* Total Remaining Liability */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 shadow-xl border border-slate-800/80 transition-all flex items-center justify-between">
+        <div className="fintech-card rounded-3xl p-5 shadow-xl border border-white/[0.08] hover:border-rose-500/30 transition-all flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Outstanding Debt</p>
             <h3 className="text-2xl font-extrabold text-rose-400 font-amount">{formatINR(totalRemainingLiability)}</h3>
             <p className="text-xs text-slate-500 mt-1">remaining principal balance</p>
           </div>
-          <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl">
+          <div className="p-3 bg-rose-500/10 text-rose-400 rounded-2xl border border-rose-500/20">
             <AlertCircle className="w-6 h-6" />
           </div>
         </div>
 
         {/* Active EMIs Count */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 shadow-xl border border-slate-800/80 transition-all flex items-center justify-between">
+        <div className="fintech-card rounded-3xl p-5 shadow-xl border border-white/[0.08] hover:border-purple-500/30 transition-all flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Active Purchases</p>
             <h3 className="text-2xl font-extrabold text-purple-400 font-amount">{activeEmis.length}</h3>
             <p className="text-xs text-slate-500 mt-1">ongoing monthly plans</p>
           </div>
-          <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl">
+          <div className="p-3 bg-purple-500/10 text-purple-400 rounded-2xl border border-purple-500/20">
             <ShoppingBag className="w-6 h-6" />
           </div>
         </div>
 
         {/* Completed EMIs */}
-        <div className="bg-[#111827] hover:bg-[#151E32] rounded-2xl p-5 shadow-xl border border-slate-800/80 transition-all flex items-center justify-between">
+        <div className="fintech-card rounded-3xl p-5 shadow-xl border border-white/[0.08] hover:border-emerald-500/30 transition-all flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Completed EMIs</p>
             <h3 className="text-2xl font-extrabold text-emerald-400 font-amount">{completedEmis.length}</h3>
             <p className="text-xs text-slate-500 mt-1">fully paid-off items 🎉</p>
           </div>
-          <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+          <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">
             <CheckCircle2 className="w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* Main Full-Width EMI List Container */}
-      <div className="bg-[#111827] rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800/80 space-y-6">
+      <div className="fintech-card rounded-3xl p-5 sm:p-8 shadow-2xl border border-white/[0.08] space-y-6 relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
@@ -353,9 +355,7 @@ export default function EmiTab({ user, onTransactionAdded }) {
         </div>
 
         {isLoading ? (
-          <div className="py-20 flex justify-center items-center">
-            <div className="w-10 h-10 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
-          </div>
+          <LoadingScreen fullScreen={false} size="sm" message="Loading EMI records..." subtext="" />
         ) : displayEmis.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center text-center">
             <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
@@ -494,8 +494,8 @@ export default function EmiTab({ user, onTransactionAdded }) {
 
       {/* --- PAY INSTALLMENT CONFIRM MODAL --- */}
       {payingItem && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative space-y-5">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="fintech-card border border-white/[0.1] rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative space-y-5">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-400" />
@@ -544,16 +544,17 @@ export default function EmiTab({ user, onTransactionAdded }) {
               {logToOverview && (
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 mb-1">Expense Category</label>
-                  <select
+                  <CustomDropdown
                     value={payCategory}
-                    onChange={(e) => setPayCategory(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                  >
-                    <option value="Shopping">Shopping</option>
-                    <option value="Bills & Utilities">Bills & Utilities</option>
-                    <option value="Transportation">Transportation</option>
-                    <option value="Other">Other</option>
-                  </select>
+                    onChange={setPayCategory}
+                    options={[
+                      { value: 'Shopping', label: 'Shopping' },
+                      { value: 'Bills & Utilities', label: 'Bills & Utilities' },
+                      { value: 'Transportation', label: 'Transportation' },
+                      { value: 'Other', label: 'Other' }
+                    ]}
+                    placeholder="Select Category"
+                  />
                 </div>
               )}
             </div>
@@ -581,8 +582,8 @@ export default function EmiTab({ user, onTransactionAdded }) {
 
       {/* --- DELETE CONFIRM MODAL --- */}
       {deletingId && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative space-y-5 text-center">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="fintech-card border border-white/[0.1] rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative space-y-5 text-center">
             <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto border border-rose-500/20">
               <Trash2 className="w-6 h-6" />
             </div>
@@ -610,8 +611,8 @@ export default function EmiTab({ user, onTransactionAdded }) {
         </div>
       )}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
+          <div className="fintech-card border border-white/[0.1] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <PlusCircle className="w-6 h-6 text-purple-400" />
@@ -765,8 +766,8 @@ export default function EmiTab({ user, onTransactionAdded }) {
 
       {/* --- EDIT EMI MODAL --- */}
       {editingEmi && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
+          <div className="fintech-card border border-white/[0.1] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Pencil className="w-6 h-6 text-purple-400" />

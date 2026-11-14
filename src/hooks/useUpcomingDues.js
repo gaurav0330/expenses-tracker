@@ -1,20 +1,41 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getEmis, getSips } from '../lib/expenseService';
+import { getEmis, getSips, getSubscriptions } from '../lib/expenseService';
 import { formatINR } from '../lib/utils';
 import { format, isSameMonth, getDaysInMonth } from 'date-fns';
 
+const getOrdinalSuffix = (day) => {
+  if (!day) return 'th';
+  const d = parseInt(day, 10);
+  if ([1, 21, 31].includes(d)) return 'st';
+  if ([2, 22].includes(d)) return 'nd';
+  if ([3, 23].includes(d)) return 'rd';
+  return 'th';
+};
+
 export function useUpcomingDues(user) {
   const [upcomingDues, setUpcomingDues] = useState([]);
+  const [rawEmis, setRawEmis] = useState([]);
+  const [rawSips, setRawSips] = useState([]);
+  const [rawSubs, setRawSubs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshDues = useCallback(async () => {
     if (!user?.uid) return;
     setIsLoading(true);
     try {
-      const [emis, sips] = await Promise.all([
+      const [emisRes, sipsRes, subsRes] = await Promise.allSettled([
         getEmis(user.uid),
-        getSips(user.uid)
+        getSips(user.uid),
+        getSubscriptions(user.uid)
       ]);
+
+      const emis = emisRes.status === 'fulfilled' ? emisRes.value : [];
+      const sips = sipsRes.status === 'fulfilled' ? sipsRes.value : [];
+      const subs = subsRes.status === 'fulfilled' ? subsRes.value : [];
+
+      setRawEmis(emis);
+      setRawSips(sips);
+      setRawSubs(subs);
 
       const now = new Date();
       const currentDay = now.getDate();
@@ -88,7 +109,36 @@ export function useUpcomingDues(user) {
           amount: sip.amount || 0,
           dueDay: deductionDay,
           daysUntil,
-          subtext: 'Auto-Debit Mutual Fund SIP',
+          subtext: `Monthly SIP debit on ${deductionDay}${getOrdinalSuffix(deductionDay)} of month`,
+          isUrgent: daysUntil <= 2,
+          dateLabel: daysUntil === 0 
+            ? 'Due Today!' 
+            : daysUntil === 1 
+            ? 'Due Tomorrow' 
+            : `Due in ${daysUntil} days`
+        });
+      });
+
+      // 3. Process Subscriptions
+      subs.forEach((sub) => {
+        if (sub.status === 'paused' || sub.status === 'cancelled') return;
+        const renewalDay = parseInt(sub.renewalDay || 1, 10);
+        let daysUntil = 0;
+        if (renewalDay >= currentDay) {
+          daysUntil = renewalDay - currentDay;
+        } else {
+          daysUntil = (daysInThisMonth - currentDay) + renewalDay;
+        }
+
+        items.push({
+          id: `sub-${sub.id}`,
+          rawId: sub.id,
+          type: 'Subscription',
+          title: sub.name,
+          amount: Number(sub.amount) || 0,
+          dueDay: renewalDay,
+          daysUntil,
+          subtext: `Recurring ${sub.billingCycle || 'monthly'} subscription`,
           isUrgent: daysUntil <= 2,
           dateLabel: daysUntil === 0 
             ? 'Due Today!' 
@@ -139,6 +189,9 @@ export function useUpcomingDues(user) {
     upcomingDues,
     urgentDues,
     totalUrgentAmount,
+    rawEmis,
+    rawSips,
+    rawSubs,
     isLoading,
     refreshDues
   };

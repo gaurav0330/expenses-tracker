@@ -4,6 +4,7 @@ import { Users, CheckCircle, Clock, Trash2, PlusCircle, X } from 'lucide-react';
 import { addLend, getLends, updateLendStatus, deleteLend } from '../lib/expenseService';
 import toast from 'react-hot-toast';
 import { formatINR } from '../lib/utils';
+import LoadingScreen from './LoadingScreen';
 
 export default function LendingTab({ user }) {
   const [lends, setLends] = useState([]);
@@ -104,7 +105,7 @@ export default function LendingTab({ user }) {
       </div>
 
       {/* Main Full-Width Lending Records Container */}
-      <div className="bg-[#111827] rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800/80 space-y-6">
+      <div className="fintech-card rounded-3xl p-5 sm:p-8 shadow-2xl border border-white/[0.08] space-y-6 relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
@@ -126,9 +127,7 @@ export default function LendingTab({ user }) {
         </div>
         
         {isLoading ? (
-          <div className="py-20 flex justify-center items-center">
-            <div className="w-10 h-10 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
-          </div>
+          <LoadingScreen fullScreen={false} size="sm" message="Loading lending records..." subtext="" />
         ) : lends.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center text-center">
             <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
@@ -180,8 +179,8 @@ export default function LendingTab({ user }) {
 
       {/* --- ADD LENDING MODAL --- */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
+          <div className="fintech-card border border-white/[0.1] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <PlusCircle className="w-6 h-6 text-indigo-400" />

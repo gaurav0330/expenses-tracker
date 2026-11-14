@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { X, Building2, Wallet, CreditCard, Landmark, Plus, Edit2, Trash2, Check, ArrowRightLeft, Shield, AlertTriangle } from 'lucide-react';
 import { formatINR } from '../lib/utils';
+import CustomDropdown from './CustomDropdown';
 import toast from 'react-hot-toast';
 
 const ACCOUNT_TYPES = [
@@ -59,6 +60,36 @@ export default function ManageAccountsModal({
   const [shiftToId, setShiftToId] = useState(accounts[1]?.id || accounts[0]?.id || '');
   const [shiftCategory, setShiftCategory] = useState('ALL');
   const [isShifting, setIsShifting] = useState(false);
+
+  const accountTypeOptions = useMemo(() => {
+    return ACCOUNT_TYPES.map(t => ({
+      value: t.id,
+      label: t.label,
+      icon: t.icon
+    }));
+  }, []);
+
+  const migrationOptions = useMemo(() => {
+    return accounts
+      .filter(a => a.id !== deletingAccountId)
+      .map(a => ({
+        value: a.id,
+        label: `Move transactions to: ${a.name}`
+      }));
+  }, [accounts, deletingAccountId]);
+
+  const shiftFromOptions = useMemo(() => {
+    return accounts.map(a => ({ value: a.id, label: `${a.name} (${a.type})` }));
+  }, [accounts]);
+
+  const shiftToOptions = useMemo(() => {
+    return accounts.filter(a => a.id !== shiftFromId).map(a => ({ value: a.id, label: `${a.name} (${a.type})` }));
+  }, [accounts, shiftFromId]);
+
+  const shiftCategoryOptions = useMemo(() => [
+    { value: 'ALL', label: 'All Categories (Shift All Transactions)' },
+    ...categories.map(c => ({ value: c, label: c }))
+  ], [categories]);
 
   if (!isOpen) return null;
 
@@ -153,17 +184,17 @@ export default function ManageAccountsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#111827] border border-slate-800 rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div className="fintech-card border border-white/[0.1] rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
         
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/60 shrink-0">
+        <div className="p-5 sm:p-6 border-b border-white/[0.06] flex items-center justify-between bg-dark-950/60 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 tracking-tight">
                 Bank & Cash Accounts Management
               </h2>
               <p className="text-slate-400 text-xs">
@@ -173,14 +204,14 @@ export default function ManageAccountsModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
+            className="p-2 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-xl transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex border-b border-slate-800 bg-slate-900/40 p-2 gap-2 shrink-0">
+        <div className="flex border-b border-white/[0.06] bg-dark-950/40 p-2 gap-2 shrink-0">
           <button
             onClick={() => setActiveTab('accounts')}
             className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
@@ -248,15 +279,12 @@ export default function ManageAccountsModal({
                           </div>
                           <div>
                             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Account Type</label>
-                            <select
+                            <CustomDropdown
                               value={editType}
-                              onChange={(e) => setEditType(e.target.value)}
-                              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                            >
-                              {ACCOUNT_TYPES.map(t => (
-                                <option key={t.id} value={t.id}>{t.label}</option>
-                              ))}
-                            </select>
+                              onChange={setEditType}
+                              options={accountTypeOptions}
+                              placeholder="Select Account Type"
+                            />
                           </div>
                         </div>
 
@@ -407,15 +435,12 @@ export default function ManageAccountsModal({
                       <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                         Account Type
                       </label>
-                      <select
+                      <CustomDropdown
                         value={newType}
-                        onChange={(e) => setNewType(e.target.value)}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
-                      >
-                        {ACCOUNT_TYPES.map(t => (
-                          <option key={t.id} value={t.id}>{t.label}</option>
-                        ))}
-                      </select>
+                        onChange={setNewType}
+                        options={accountTypeOptions}
+                        placeholder="Select Account Type"
+                      />
                     </div>
                   </div>
 
@@ -482,17 +507,12 @@ export default function ManageAccountsModal({
                   <p className="text-xs text-slate-300">
                     If this account has existing transactions, please select an account to migrate them to:
                   </p>
-                  <select
+                  <CustomDropdown
                     value={migrationTargetId}
-                    onChange={(e) => setMigrationTargetId(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
-                  >
-                    {accounts.filter(a => a.id !== deletingAccountId).map(a => (
-                      <option key={a.id} value={a.id}>
-                        Move transactions to: {a.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setMigrationTargetId}
+                    options={migrationOptions}
+                    placeholder="Select target account"
+                  />
                   <div className="flex justify-end gap-2 pt-1">
                     <button
                       type="button"
@@ -534,34 +554,24 @@ export default function ManageAccountsModal({
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                       Shift From (Source Account)
                     </label>
-                    <select
+                    <CustomDropdown
                       value={shiftFromId}
-                      onChange={(e) => setShiftFromId(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                    >
-                      {accounts.map(acc => (
-                        <option key={acc.id} value={acc.id}>
-                          {acc.name} ({acc.type})
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setShiftFromId}
+                      options={shiftFromOptions}
+                      placeholder="Select Source Account"
+                    />
                   </div>
 
                   <div>
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                       Shift To (Target Account)
                     </label>
-                    <select
+                    <CustomDropdown
                       value={shiftToId}
-                      onChange={(e) => setShiftToId(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                    >
-                      {accounts.map(acc => (
-                        <option key={acc.id} value={acc.id} disabled={acc.id === shiftFromId}>
-                          {acc.name} ({acc.type})
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setShiftToId}
+                      options={shiftToOptions}
+                      placeholder="Select Target Account"
+                    />
                   </div>
                 </div>
 
@@ -569,16 +579,13 @@ export default function ManageAccountsModal({
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                     Filter by Category (Optional)
                   </label>
-                  <select
+                  <CustomDropdown
                     value={shiftCategory}
-                    onChange={(e) => setShiftCategory(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                  >
-                    <option value="ALL">All Categories (Shift All Transactions)</option>
-                    {categories.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                    onChange={setShiftCategory}
+                    options={shiftCategoryOptions}
+                    placeholder="All Categories"
+                    searchable={shiftCategoryOptions.length > 6}
+                  />
                   <span className="text-[11px] text-slate-500 mt-1 block">
                     e.g. Choose &quot;Food &amp; Dining&quot; to only move lunch/dinner records, or &quot;All Categories&quot; to move everything.
                   </span>

@@ -4,6 +4,7 @@ import { getAllTimeSummary } from '../lib/expenseService';
 import { formatINR } from '../lib/utils';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import LoadingScreen from './LoadingScreen';
 import toast from 'react-hot-toast';
 
 export default function ProfileModal({ user, isOpen, onClose }) {
@@ -41,11 +42,11 @@ export default function ProfileModal({ user, isOpen, onClose }) {
     : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#111827] border border-slate-800 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col custom-scrollbar">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div className="fintech-card border border-white/[0.1] rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col custom-scrollbar">
         
         {/* Modal Header */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+        <div className="p-6 border-b border-white/[0.06] flex items-center justify-between bg-dark-950/60">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-500/20">
               {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
@@ -72,10 +73,7 @@ export default function ProfileModal({ user, isOpen, onClose }) {
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
           {isLoading ? (
-            <div className="py-20 flex flex-col items-center justify-center">
-              <div className="w-10 h-10 border-3 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mb-4" />
-              <p className="text-slate-400 text-sm font-medium">Calculating your complete financial portfolio...</p>
-            </div>
+            <LoadingScreen fullScreen={false} size="sm" message="Calculating your complete financial portfolio..." subtext="" />
           ) : summary ? (
             <>
               {/* Total Estimated Assets / Net Worth Hero Card */}
